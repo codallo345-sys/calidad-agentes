@@ -209,6 +209,24 @@
               </div>
             </div>
           </div>
+
+          <!-- Team Quality Metrics (Global and Detailed by Team) -->
+          <div class="glass" style="padding: 1.5rem; margin-top: 1.5rem;" id="teamQualityMetrics">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary);">
+                <i class="fas fa-chart-pie" style="color: #38CEA6; margin-right: 0.5rem;"></i>
+                Acumulado de Calidad en Gestión
+              </h3>
+              <div style="min-width: 200px;">
+                <select id="teamQualitySelector" class="input-dark">
+                  <option value="">Acumulado Global</option>
+                </select>
+              </div>
+            </div>
+            <div id="teamQualityContent">
+              <p class="empty">Seleccione un equipo o vea el acumulado global</p>
+            </div>
+          </div>
         </div>
 
         <!-- Audits View -->
@@ -710,6 +728,12 @@
           <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.75rem 0; color: var(--text-primary);">
             <i class="fas fa-chart-pie"></i> Resumen de Evaluación
           </h3>
+          
+          <!-- Strict Rule Warning -->
+          <div id="strictRuleWarning" style="display: none; background: #fee2e2; color: #b91c1c; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem; font-weight: 600; text-align: center;">
+            ⚠️ REGLA ESTRICTA: 2 o más errores = 0 puntos
+          </div>
+          
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
             <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
               <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Empatía</div>

@@ -9,7 +9,9 @@ const DataManager = {
     TEAMS: 'calidad_teams',
     METRICS: 'calidad_metrics',
     WEEKLY_METRICS: 'calidad_weekly_metrics',
-    WEEK_CONFIG: 'calidad_week_config'
+    WEEK_CONFIG: 'calidad_week_config',
+    AUDIT_VIEWS: 'calidad_audit_views',
+    AUDIT_COMMENTS: 'calidad_audit_comments'
   },
 
   // Team definitions
@@ -24,24 +26,25 @@ const DataManager = {
   // Default agents (2 per team as examples)
   DEFAULT_AGENTS: {
     'soporte-usuarios': [
-      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios' },
-      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios' }
+      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios', shift: 'AM' },
+      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios', shift: 'PM' }
     ],
     'soporte-conductores': [
-      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores' },
-      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores' }
+      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores', shift: 'AM' },
+      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores', shift: 'PM' },
+      { name: 'Allen Castro', email: 'allen.castro@ridery.com', team: 'soporte-conductores', shift: 'Weekend' }
     ],
     'soporte-ecr': [
-      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr' },
-      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr' }
+      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr', shift: 'AM' },
+      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr', shift: 'Weekend' }
     ],
     'soporte-corporativo': [
-      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo' },
-      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo' }
+      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo', shift: 'PM' },
+      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo', shift: 'AM' }
     ],
     'soporte-delivery': [
-      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery' },
-      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery' }
+      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery', shift: 'AM' },
+      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery', shift: 'Weekend' }
     ]
   },
 
@@ -276,43 +279,72 @@ const DataManager = {
     return audits;
   },
 
-  // Calculate score based on new pillar system
-  // Note: This detailed scoring system is available for future implementation
-  // Currently, audits use a simplified default score approach
+  // Calculate score based on new pillar system with STRICT 2-error rule
+  // Rule: 2 or more errors = 0 points (no partial scores)
   calculateAuditScore(evaluationData) {
-    // Pilar Empatía (50%) - 6 criterios x 8.33 puntos = 50%
+    // Count total errors (unchecked items)
     const empatiaCriteria = [
       'metodoRided', 'lenguajePositivo', 'acompanamiento', 
       'personalizacion', 'estructura', 'usoIaOrtografia'
     ];
+    
+    const gestionTicketCriteria = [
+      'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 
+      'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion'
+    ];
+    
+    const conocimientoCriteria = [
+      'serviciosPromociones', 'informacionVeraz', 
+      'parlamentosContingencia', 'honestidadTransparencia'
+    ];
+    
+    const herramientasCriteria = [
+      'rideryOffice', 'adminZendesk', 'driveManuales', 
+      'slack', 'generacionReportes', 'cargaIncidencias'
+    ];
+
+    // Count errors (unchecked = error)
+    let totalErrors = 0;
+    
+    empatiaCriteria.forEach(criterion => {
+      if (!evaluationData.empatia?.[criterion]) totalErrors++;
+    });
+    
+    gestionTicketCriteria.forEach(criterion => {
+      if (!evaluationData.gestion?.ticket?.[criterion]) totalErrors++;
+    });
+    
+    conocimientoCriteria.forEach(criterion => {
+      if (!evaluationData.gestion?.conocimiento?.[criterion]) totalErrors++;
+    });
+    
+    herramientasCriteria.forEach(criterion => {
+      if (!evaluationData.gestion?.herramientas?.[criterion]) totalErrors++;
+    });
+
+    // STRICT RULE: 2 or more errors = 0 points
+    if (totalErrors >= 2) {
+      return 0;
+    }
+
+    // If 0 or 1 error, calculate normal score
+    // Pilar Empatía (50%) - 6 criterios x 8.33 puntos = 50%
     const empatiaScore = empatiaCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.empatia?.[criterion] ? 8.33 : 0);
     }, 0);
 
     // Pilar Gestión (50%)
     // Gestión de ticket (33% of 50% = 16.67%)
-    const gestionTicketCriteria = [
-      'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 
-      'tipificacion', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion'
-    ];
     const gestionTicketScore = gestionTicketCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.gestion?.ticket?.[criterion] ? (16.67 / 7) : 0);
     }, 0);
 
     // Conocimiento Integral (33% of 50% = 16.67%)
-    const conocimientoCriteria = [
-      'serviciosPromociones', 'informacionVeraz', 
-      'parlamentosContingencia', 'honestidadTransparencia'
-    ];
     const conocimientoScore = conocimientoCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.gestion?.conocimiento?.[criterion] ? (16.67 / 4) : 0);
     }, 0);
 
     // Uso estratégico de herramientas (33% of 50% = 16.67%)
-    const herramientasCriteria = [
-      'rideryOffice', 'adminZendesk', 'driveManuales', 
-      'slack', 'generacionReportes', 'cargaIncidencias'
-    ];
     const herramientasScore = herramientasCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.gestion?.herramientas?.[criterion] ? (16.67 / 6) : 0);
     }, 0);
@@ -657,6 +689,57 @@ const DataManager = {
     const allConfigs = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.WEEK_CONFIG) || '{}');
     allConfigs[key] = weeks;
     localStorage.setItem(this.STORAGE_KEYS.WEEK_CONFIG, JSON.stringify(allConfigs));
+  },
+
+  // Audit Views Tracking
+  markAuditAsViewed(auditId, viewerEmail) {
+    const views = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_VIEWS) || '{}');
+    if (!views[auditId]) {
+      views[auditId] = [];
+    }
+    if (!views[auditId].includes(viewerEmail)) {
+      views[auditId].push(viewerEmail);
+      localStorage.setItem(this.STORAGE_KEYS.AUDIT_VIEWS, JSON.stringify(views));
+    }
+  },
+
+  hasViewedAudit(auditId, viewerEmail) {
+    const views = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_VIEWS) || '{}');
+    return views[auditId] && views[auditId].includes(viewerEmail);
+  },
+
+  // Audit Comments (Agent feedback on their audits)
+  saveAuditComment(auditId, agentEmail, comment) {
+    const comments = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_COMMENTS) || '{}');
+    comments[auditId] = {
+      agentEmail,
+      comment,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(this.STORAGE_KEYS.AUDIT_COMMENTS, JSON.stringify(comments));
+  },
+
+  getAuditComment(auditId) {
+    const comments = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_COMMENTS) || '{}');
+    return comments[auditId] || null;
+  },
+
+  // Add or update team member with shift information
+  addTeamMemberWithShift(teamId, memberData) {
+    const teams = this.getAllTeams();
+    if (teams[teamId]) {
+      // Ensure shift is included
+      const member = {
+        ...memberData,
+        team: teamId,
+        shift: memberData.shift || 'AM',
+        addedAt: new Date().toISOString()
+      };
+      teams[teamId].members.push(member);
+      localStorage.setItem(this.STORAGE_KEYS.TEAMS, JSON.stringify(teams));
+      return true;
+    }
+    return false;
   },
 
   // Utility
