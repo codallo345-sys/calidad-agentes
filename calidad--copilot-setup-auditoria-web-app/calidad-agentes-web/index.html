@@ -525,49 +525,75 @@
             </div>
 
           <div style="display: grid; gap: 0.5rem;">
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="metodoRided" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>MÉTODO RIDED</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Bienvenida, Indagación, Solución, Escucha Empática, Despedida.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="metodoRided" onchange="App.toggleObservationField('metodoRided'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>MÉTODO RIDED</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Bienvenida, Indagación, Solución, Escucha Empática, Despedida.</div>
+                </div>
+              </label>
+              <div id="obs-metodoRided" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="lenguajePositivo" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>LENGUAJE POSITIVO</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Reconocimiento del contexto y estado del cliente. Cortesía.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="lenguajePositivo" onchange="App.toggleObservationField('lenguajePositivo'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>LENGUAJE POSITIVO</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Reconocimiento del contexto y estado del cliente. Cortesía.</div>
+                </div>
+              </label>
+              <div id="obs-lenguajePositivo" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="acompanamiento" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>ACOMPAÑAMIENTO</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">No abandono. Gestión del tiempo de espera.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="acompanamiento" onchange="App.toggleObservationField('acompanamiento'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>ACOMPAÑAMIENTO</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">No abandono. Gestión del tiempo de espera.</div>
+                </div>
+              </label>
+              <div id="obs-acompanamiento" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="personalizacion" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>PERSONALIZACIÓN</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Adaptación de plantillas. Evitar repetición.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="personalizacion" onchange="App.toggleObservationField('personalizacion'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>PERSONALIZACIÓN</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Adaptación de plantillas. Evitar repetición.</div>
+                </div>
+              </label>
+              <div id="obs-personalizacion" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="estructura" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>ESTRUCTURA</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Consolidación de mensajes y ritmo de conversación.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="estructura" onchange="App.toggleObservationField('estructura'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>ESTRUCTURA</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Consolidación de mensajes y ritmo de conversación.</div>
+                </div>
+              </label>
+              <div id="obs-estructura" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="usoIaOrtografia" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="usoIaOrtografia" onchange="App.toggleObservationField('usoIaOrtografia'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
                 <strong>USO DE IA, ORTOGRAFÍA Y EMOJIS</strong>
                 <div style="font-size: 0.85rem; color: var(--text-muted);">Aplicación de IA, escritura correcta y comunicación visual adecuada.</div>
               </div>

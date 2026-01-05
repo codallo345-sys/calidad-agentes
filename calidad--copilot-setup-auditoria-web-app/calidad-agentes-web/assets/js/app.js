@@ -2379,6 +2379,20 @@ const App = {
     return checked;
   },
 
+  toggleObservationField(criterionId) {
+    const checkbox = document.getElementById(criterionId);
+    const obsField = document.getElementById(`obs-${criterionId}`);
+    
+    if (checkbox && obsField) {
+      // Show observation field if checkbox is NOT checked
+      if (checkbox.checked) {
+        obsField.style.display = 'none';
+      } else {
+        obsField.style.display = 'block';
+      }
+    }
+  },
+
   calculateScore() {
     // Calculate Empatía (50% total)
     const empatiaCriteria = ['metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia'];
