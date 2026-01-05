@@ -605,7 +605,6 @@ const App = {
     // Load team quality breakdown (only for editors)
     if (isEditor) {
       this.loadTeamQualityBreakdown();
-      this.loadShiftMetricsBreakdown();
     }
     
     // Load quality comparison chart (only for team users)
@@ -974,143 +973,6 @@ const App = {
     `;
   },
 
-  loadShiftMetricsBreakdown() {
-    const container = document.getElementById('shiftMetricsBreakdown');
-    if (!container) return;
-
-    const allAudits = DataManager.getAllAudits();
-    const teams = DataManager.getAllTeams();
-    const now = new Date();
-    
-    // Get last 7 days for weekly average
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const recentAudits = allAudits.filter(audit => {
-      const auditDate = new Date(audit.date);
-      return auditDate >= sevenDaysAgo;
-    });
-
-    if (recentAudits.length === 0) {
-      container.innerHTML = '<p class="empty">No hay auditorías en los últimos 7 días</p>';
-      return;
-    }
-
-    // Group audits by agent shift
-    const shiftMetrics = {
-      'AM': { audits: [], agents: new Set() },
-      'PM': { audits: [], agents: new Set() },
-      'Weekend': { audits: [], agents: new Set() }
-    };
-
-    recentAudits.forEach(audit => {
-      // Find agent's shift from team members
-      let agentShift = null;
-      Object.values(teams).forEach(team => {
-        if (team.members) {
-          const member = team.members.find(m => m.name === audit.agentName);
-          if (member && member.shift) {
-            agentShift = member.shift;
-          }
-        }
-      });
-
-      if (agentShift && shiftMetrics[agentShift]) {
-        shiftMetrics[agentShift].audits.push(audit);
-        shiftMetrics[agentShift].agents.add(audit.agentName);
-      }
-    });
-
-    // Calculate averages per shift
-    const shiftResults = [];
-    Object.entries(shiftMetrics).forEach(([shift, data]) => {
-      if (data.audits.length > 0) {
-        const avgQuality = Math.round(
-          data.audits.reduce((sum, a) => sum + (parseFloat(a.score) || 0), 0) / data.audits.length
-        );
-        const avgEmpatia = Math.round(
-          data.audits.reduce((sum, a) => sum + (parseFloat(a.empatiaScore) || 0), 0) / data.audits.length
-        );
-        const avgGestion = Math.round(
-          data.audits.reduce((sum, a) => sum + (parseFloat(a.gestionScore) || 0), 0) / data.audits.length
-        );
-        
-        // Calculate satisfaction percentage from recent audits
-        // Assuming satisfaction data would be in metrics, for now use quality as proxy
-        const avgSatisfaction = avgQuality; // TODO: Calculate from actual satisfaction data
-
-        shiftResults.push({
-          shift,
-          shiftLabel: shift === 'AM' ? 'Turno Matutino' : shift === 'PM' ? 'Turno Vespertino' : 'Fin de Semana',
-          count: data.audits.length,
-          agents: data.agents.size,
-          avgQuality,
-          avgEmpatia,
-          avgGestion,
-          avgSatisfaction
-        });
-      }
-    });
-
-    if (shiftResults.length === 0) {
-      container.innerHTML = '<p class="empty">No hay datos de turnos disponibles</p>';
-      return;
-    }
-
-    const shiftIcons = {
-      'AM': '🌅',
-      'PM': '🌆',
-      'Weekend': '🎉'
-    };
-
-    const shiftColors = {
-      'AM': '#38CEA6',
-      'PM': '#f59e0b',
-      'Weekend': '#D71D5C'
-    };
-
-    container.innerHTML = `
-      <div style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-        <i class="fas fa-calendar-week"></i> Promedios de los últimos 7 días
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-        ${shiftResults.map(shift => `
-          <div style="border: 2px solid ${shiftColors[shift.shift]}; border-radius: 0.75rem; padding: 1.25rem; background: linear-gradient(135deg, ${shiftColors[shift.shift]}08, ${shiftColors[shift.shift]}03);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <div>
-                <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">${shiftIcons[shift.shift]}</div>
-                <h4 style="font-size: 1rem; font-weight: 700; margin: 0; color: ${shiftColors[shift.shift]};">
-                  ${shift.shiftLabel}
-                </h4>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
-                  ${shift.count} auditorías • ${shift.agents} agentes
-                </div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Calidad</div>
-                <div style="font-size: 2rem; font-weight: 800; color: ${shift.avgQuality >= 83 ? '#10b981' : shift.avgQuality >= 70 ? '#f59e0b' : '#ef4444'};">
-                  ${shift.avgQuality}%
-                </div>
-              </div>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
-              <div style="background: white; padding: 0.5rem; border-radius: 0.375rem; text-align: center;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">Empatía</div>
-                <div style="font-size: 1.1rem; font-weight: 700; color: #38CEA6;">${shift.avgEmpatia}%</div>
-              </div>
-              <div style="background: white; padding: 0.5rem; border-radius: 0.375rem; text-align: center;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">Gestión</div>
-                <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">${shift.avgGestion}%</div>
-              </div>
-              <div style="background: white; padding: 0.5rem; border-radius: 0.375rem; text-align: center; grid-column: span 2;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">% Satisfacción</div>
-                <div style="font-size: 1.1rem; font-weight: 700; color: ${shift.avgSatisfaction >= 83 ? '#10b981' : '#f59e0b'};">${shift.avgSatisfaction}%</div>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
   },
   
   loadQualityComparisonChart() {
@@ -1491,7 +1353,6 @@ const App = {
         document.getElementById('auditDate').value = audit.date;
         document.getElementById('tipificacion').value = audit.tipificacion || '';
         document.getElementById('ticketSummary').value = audit.ticketSummary || '';
-        document.getElementById('observations').value = audit.observations || '';
         document.getElementById('calculatedScore').value = audit.score || 0;
         
         // Load evaluation data if exists
@@ -1523,6 +1384,17 @@ const App = {
         
         // Recalculate score with loaded data
         this.calculateScore();
+        
+        // Update observation icons based on checkbox states
+        const allCriteriaIds = [
+          'metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia',
+          'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion',
+          'serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia',
+          'rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'
+        ];
+        allCriteriaIds.forEach(id => {
+          this.toggleObservationIcon(id);
+        });
       }
     } else {
       modalTitle.textContent = 'Nueva Auditoría de Chat';
@@ -1533,6 +1405,20 @@ const App = {
       document.getElementById('ticketDate').value = today;
       document.getElementById('calculatedScore').value = 0;
       this.calculateScore();
+      
+      // Hide all observation icons initially (since all checkboxes are unchecked in new audit)
+      const allCriteriaIds = [
+        'metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia',
+        'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion',
+        'serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia',
+        'rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'
+      ];
+      allCriteriaIds.forEach(id => {
+        const icon = document.getElementById(`icon-${id}`);
+        if (icon) icon.style.display = 'none';
+        const obsField = document.getElementById(`obs-${id}`);
+        if (obsField) obsField.style.display = 'none';
+      });
     }
     
     modal.classList.remove('hidden');
@@ -1620,7 +1506,6 @@ const App = {
       date: document.getElementById('auditDate').value,
       tipificacion: document.getElementById('tipificacion').value,
       ticketSummary: document.getElementById('ticketSummary').value,
-      observations: document.getElementById('observations').value,
       score: parseFloat(document.getElementById('calculatedScore').value) || 0,
       empatiaScore: parseFloat(document.getElementById('empatiaScore').value) || 0,
       gestionScore: parseFloat(document.getElementById('gestionScore').value) || 0,
@@ -1672,10 +1557,26 @@ const App = {
     const currentUser = DataManager.getCurrentUser();
     const isEditor = DataManager.isEditor();
     
-    // Mark as viewed by current user
-    DataManager.markAuditAsViewed(auditId, currentUser.email);
-    
+    // Mark as viewed ONLY if current user is the agent (not editor viewing it)
+    // Check if current user's email matches the agent's email or agent name
     const teams = DataManager.getAllTeams();
+    let isAgentOfThisAudit = false;
+    Object.values(teams).forEach(team => {
+      if (team.members) {
+        const member = team.members.find(m => 
+          m.name === audit.agentName || m.email === currentUser.email
+        );
+        if (member && member.name === audit.agentName) {
+          isAgentOfThisAudit = true;
+        }
+      }
+    });
+    
+    // Only mark as viewed if the person viewing is the agent themselves
+    if (isAgentOfThisAudit && !isEditor) {
+      DataManager.markAuditAsViewed(auditId, currentUser.email);
+    }
+    
     const team = teams[audit.teamId];
     const teamName = team ? team.name : 'N/A';
 
@@ -2603,16 +2504,34 @@ const App = {
     return checked;
   },
 
-  toggleObservationField(criterionId) {
+  toggleObservationIcon(criterionId) {
     const checkbox = document.getElementById(criterionId);
+    const icon = document.getElementById(`icon-${criterionId}`);
     const obsField = document.getElementById(`obs-${criterionId}`);
     
-    if (checkbox && obsField) {
-      // Show observation field if checkbox is NOT checked
+    if (checkbox && icon) {
+      // Show pencil icon if checkbox is NOT checked
       if (checkbox.checked) {
-        obsField.style.display = 'none';
+        icon.style.display = 'none';
+        // Also hide textarea if it was open
+        if (obsField) {
+          obsField.style.display = 'none';
+        }
       } else {
+        icon.style.display = 'block';
+      }
+    }
+  },
+
+  toggleObservationTextarea(criterionId) {
+    const obsField = document.getElementById(`obs-${criterionId}`);
+    
+    if (obsField) {
+      // Toggle textarea visibility
+      if (obsField.style.display === 'none' || obsField.style.display === '') {
         obsField.style.display = 'block';
+      } else {
+        obsField.style.display = 'none';
       }
     }
   },
