@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditorías de Calidad - Ridery 2026</title>
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-grid">
+  
+  <!-- Login/Authentication Screen -->
+  <div id="authScreen" class="overlay">
+    <div class="overlay-card glass">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #38CEA6, #0b8f6a); border-radius: 1rem; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(56, 206, 166, 0.3);">
+          <i class="fas fa-clipboard-check" style="font-size: 2.5rem; color: white;"></i>
+        </div>
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+          Auditorías de Calidad
+        </h1>
+        <p style="color: var(--text-muted); font-size: 1rem;">
+          Ridery Venezuela
+        </p>
+      </div>
+
+      <div style="background: linear-gradient(135deg, rgba(56, 206, 166, 0.1), rgba(11, 143, 106, 0.05)); border: 1px solid rgba(56, 206, 166, 0.2); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem;">
+        <p style="color: var(--text-primary); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+          <i class="fas fa-info-circle" style="color: #38CEA6; margin-right: 0.5rem;"></i>
+          <strong>Bienvenido al sistema de gestión de auditorías.</strong><br>
+          Por favor, ingrese su correo electrónico para acceder al sistema.
+        </p>
+      </div>
+
+      <form id="loginForm">
+        <div style="margin-bottom: 1rem;">
+          <label class="label-small" for="emailInput">
+            <i class="fas fa-envelope" style="margin-right: 0.25rem;"></i>
+            Correo Electrónico
+          </label>
+          <input 
+            type="email" 
+            id="emailInput" 
+            class="input-dark" 
+            placeholder="tu-email@ejemplo.com"
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <button type="submit" class="btn-accent" style="width: 100%; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer; font-size: 1rem;">
+          <i class="fas fa-sign-in-alt" style="margin-right: 0.5rem;"></i>
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <button id="clearSessionBtn" type="button" style="width: 100%; margin-top: 0.75rem; padding: 0.65rem; background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">
+        <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i>
+        Limpiar Sesión y Datos
+      </button>
+
+      <div class="overlay-hint" style="margin-top: 1.5rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+          <strong>Cuentas de prueba:</strong><br>
+          <span style="display: block; margin-top: 0.5rem;">
+            <i class="fas fa-user-edit" style="color: #38CEA6;"></i> Editor: <code>editor@ridery.com</code><br>
+            <i class="fas fa-user-check" style="color: #6b7280;"></i> Lector: <code>lector@ridery.com</code><br>
+            <br>
+            <strong>Equipos:</strong><br>
+            <i class="fas fa-users" style="color: #38CEA6;"></i> <code>soporte.usuarios@ridery.com</code><br>
+            <i class="fas fa-users" style="color: #06b6d4;"></i> <code>soporte.conductores@ridery.com</code><br>
+            <i class="fas fa-users" style="color: #a855f7;"></i> <code>soporte.ecr@ridery.com</code><br>
+            <i class="fas fa-users" style="color: #f59e0b;"></i> <code>soporte.corporativo@ridery.com</code><br>
+            <i class="fas fa-users" style="color: #ef4444;"></i> <code>soporte.delivery@ridery.com</code>
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application (hidden until authenticated) -->
+  <div id="mainApp" class="hidden">
+    <div class="app-shell">
+      <!-- Sidebar -->
+      <aside class="sidebar glass">
+        <div class="sidebar-header">
+          <div>
+            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #38CEA6, #0b8f6a); border-radius: 0.75rem; display: grid; place-items: center;">
+              <i class="fas fa-clipboard-check" style="font-size: 1.5rem; color: white;"></i>
+            </div>
+          </div>
+          <div style="flex: 1;">
+            <h2 style="font-size: 1rem; font-weight: 700; margin: 0;">Auditorías</h2>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Ridery Venezuela</p>
+          </div>
+        </div>
+
+        <nav class="nav-group" style="flex: 1;">
+          <span class="nav-title">Navegación</span>
+          <button class="nav-btn active" data-view="dashboard">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-btn" data-view="audits">
+            <i class="fas fa-list"></i>
+            <span>Auditorías</span>
+          </button>
+          <button class="nav-btn" data-view="metrics-weekly">
+            <i class="fas fa-chart-line"></i>
+            <span>Métricas Semanales</span>
+          </button>
+          <button class="nav-btn" data-view="metrics-monthly">
+            <i class="fas fa-chart-bar"></i>
+            <span>Métricas Mensuales</span>
+          </button>
+          <button class="nav-btn only-editor" data-view="teams">
+            <i class="fas fa-users"></i>
+            <span>Gestión de Equipos</span>
+          </button>
+        </nav>
+
+        <div class="nav-footer">
+          <div style="background: #f9fafb; border-radius: 0.75rem; padding: 0.75rem; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <i class="fas fa-user-circle" style="font-size: 1.5rem; color: #38CEA6;"></i>
+              <div style="flex: 1; min-width: 0;">
+                <p style="font-size: 0.85rem; font-weight: 600; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="userEmail">usuario@ridery.com</p>
+                <span id="userRoleBadge" class="badge badge-viewer" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Lector</span>
+              </div>
+            </div>
+          </div>
+          <button id="logoutBtn" class="nav-btn" style="background: #fee2e2; border-color: rgba(239, 68, 68, 0.2); color: #b91c1c;">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="main-area">
+        
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="view-section">
+          <div class="hero">
+            <div class="hero-content">
+              <div>
+                <h1 style="font-size: 2rem; font-weight: 800; margin: 0 0 0.5rem 0;">
+                  Auditorías de Calidad
+                </h1>
+                <p style="opacity: 0.95; font-size: 1rem; line-height: 1.6; margin: 0;">
+                  Gestiona y monitorea las auditorías de calidad para los agentes de Ridery Venezuela. 
+                  Mantén un seguimiento preciso de métricas semanales y anuales.
+                </p>
+                <div class="hero-pills">
+                  <span class="pill-glow">
+                    <i class="fas fa-shield-alt"></i> Seguro
+                  </span>
+                  <span class="pill-glow">
+                    <i class="fas fa-chart-line"></i> Métricas en Tiempo Real
+                  </span>
+                  <span class="pill-glow">
+                    <i class="fas fa-users"></i> Multi-Rol
+                  </span>
+                </div>
+              </div>
+              <div class="hero-login glass-mini">
+                <h3 style="font-size: 0.9rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--text-primary);">
+                  <i class="fas fa-chart-pie"></i> Resumen Rápido
+                </h3>
+                <div style="display: grid; gap: 0.75rem;">
+                  <div class="stat-card">
+                    <p class="stat-label">Total Auditorías</p>
+                    <p class="stat-value" id="totalAuditsCount">0</p>
+                  </div>
+                  <div class="stat-card">
+                    <p class="stat-label">Esta Semana</p>
+                    <p class="stat-value" id="weeklyAuditsCount">0</p>
+                  </div>
+                  <div class="stat-card">
+                    <p class="stat-label">Agentes Auditados</p>
+                    <p class="stat-value" id="totalAgentsCount">0</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+            <div class="glass" style="padding: 1.25rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 0.75rem 0; color: var(--text-primary);">
+                <i class="fas fa-clock" style="color: #38CEA6; margin-right: 0.5rem;"></i>
+                Actividad Reciente
+              </h3>
+              <div id="recentActivity">
+                <p class="empty">No hay actividad reciente</p>
+              </div>
+            </div>
+
+            <div class="glass" style="padding: 1.25rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 0.75rem 0; color: var(--text-primary);">
+                <i class="fas fa-star" style="color: #38CEA6; margin-right: 0.5rem;"></i>
+                Top Agentes
+              </h3>
+              <div id="topAgents">
+                <p class="empty">No hay datos disponibles</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audits View -->
+        <div id="auditsView" class="view-section hidden">
+          <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+              <div>
+                <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0 0 0.25rem 0;">
+                  <i class="fas fa-list"></i> Gestión de Auditorías
+                </h2>
+                <p style="color: var(--text-muted); margin: 0;">Crea, edita y visualiza todas las auditorías de calidad</p>
+              </div>
+              <button id="createAuditBtn" class="btn-accent only-editor" style="background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer;">
+                <i class="fas fa-plus"></i> Nueva Auditoría
+              </button>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+              <input 
+                type="text" 
+                id="searchAudit" 
+                class="input-dark" 
+                placeholder="Buscar por agente, ticket o comentarios..."
+                style="flex: 1; min-width: 250px;"
+              >
+              <select id="filterTeam" class="input-dark" style="width: auto;">
+                <option value="">Todos los equipos</option>
+              </select>
+              <select id="filterMonth" class="input-dark" style="width: auto;">
+                <option value="">Todos los meses</option>
+                <option value="0">Enero</option>
+                <option value="1">Febrero</option>
+                <option value="2">Marzo</option>
+                <option value="3">Abril</option>
+                <option value="4">Mayo</option>
+                <option value="5">Junio</option>
+                <option value="6">Julio</option>
+                <option value="7">Agosto</option>
+                <option value="8">Septiembre</option>
+                <option value="9">Octubre</option>
+                <option value="10">Noviembre</option>
+                <option value="11">Diciembre</option>
+              </select>
+            </div>
+
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Agente</th>
+                    <th>Equipo</th>
+                    <th>Tipificación</th>
+                    <th>N° Ticket</th>
+                    <th>Fecha Ticket</th>
+                    <th>Fecha Auditoría</th>
+                    <th>Empatía %</th>
+                    <th>Gestión %</th>
+                    <th>Total</th>
+                    <th>Resumen</th>
+                    <th>Observaciones</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="auditsTableBody">
+                  <tr>
+                    <td colspan="12" class="empty">No hay auditorías registradas</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teams Management View -->
+        <div id="teamsView" class="view-section hidden">
+          <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0 0 0.5rem 0;">
+              <i class="fas fa-users"></i> Gestión de Equipos
+            </h2>
+            <p style="color: var(--text-muted); margin: 0 0 1.5rem 0;">
+              Administra los integrantes de cada equipo de soporte
+            </p>
+
+            <div id="teamsContainer" style="display: grid; gap: 1.5rem;">
+              <!-- Teams will be loaded here dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Metrics View -->
+        <div id="metricsWeeklyView" class="view-section hidden">
+          <div class="glass" style="padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0 0 0.5rem 0;">
+                  <i class="fas fa-chart-line"></i> Métricas Semanales
+                </h2>
+                <p style="color: var(--text-muted); margin: 0;">
+                  Rendimiento de auditorías y métricas manuales por semana
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <div style="min-width: 200px;">
+                  <label class="label-small" for="filterMonthMetrics">
+                    <i class="fas fa-calendar-alt"></i> Seleccionar Mes
+                  </label>
+                  <select id="filterMonthMetrics" class="input-dark" style="width: 100%;">
+                    <option value="">Seleccionar mes...</option>
+                    <option value="0">Enero</option>
+                    <option value="1">Febrero</option>
+                    <option value="2">Marzo</option>
+                    <option value="3">Abril</option>
+                    <option value="4">Mayo</option>
+                    <option value="5">Junio</option>
+                    <option value="6">Julio</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Septiembre</option>
+                    <option value="9">Octubre</option>
+                    <option value="10">Noviembre</option>
+                    <option value="11">Diciembre</option>
+                  </select>
+                </div>
+                <button id="configWeeksBtn" class="btn-accent only-editor" style="background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer; margin-top: 1.3rem;">
+                  <i class="fas fa-cog"></i> Configurar Semanas
+                </button>
+              </div>
+            </div>
+
+            <div id="weeklyMetricsContainer">
+              <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="fas fa-calendar-week" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                <p>Seleccione un mes para ver las métricas semanales</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Metrics View -->
+        <div id="metricsMonthlyView" class="view-section hidden">
+          <div class="glass" style="padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0 0 0.5rem 0;">
+                  <i class="fas fa-chart-bar"></i> Métricas Mensuales
+                </h2>
+                <p style="color: var(--text-muted); margin: 0;">
+                  Análisis completo del mes seleccionado
+                </p>
+              </div>
+              <div style="min-width: 200px;">
+                <label class="label-small" for="filterMonthlyMetrics">
+                  <i class="fas fa-calendar-alt"></i> Seleccionar Mes
+                </label>
+                <select id="filterMonthlyMetrics" class="input-dark" style="width: 100%;">
+                  <option value="">Seleccionar mes...</option>
+                  <option value="0">Enero</option>
+                  <option value="1">Febrero</option>
+                  <option value="2">Marzo</option>
+                  <option value="3">Abril</option>
+                  <option value="4">Mayo</option>
+                  <option value="5">Junio</option>
+                  <option value="6">Julio</option>
+                  <option value="7">Agosto</option>
+                  <option value="8">Septiembre</option>
+                  <option value="9">Octubre</option>
+                  <option value="10">Noviembre</option>
+                  <option value="11">Diciembre</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="monthlyMetricsContent">
+              <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="fas fa-chart-bar" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                <p>Seleccione un mes para ver las métricas mensuales</p>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Audit Form Modal -->
+  <div id="auditModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 1rem; border-bottom: 2px solid #f0f9ff;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-clipboard-check"></i> <span id="modalTitle">Nueva Auditoría de Chat</span>
+        </h2>
+        <button id="closeModalBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="auditForm">
+        <input type="hidden" id="auditId">
+        
+        <!-- Basic Information -->
+        <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--ridery-mint);">
+            <i class="fas fa-info-circle"></i> Información Básica
+          </h3>
+          <div style="display: grid; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div>
+                <label class="label-small" for="agentSelect">
+                  <i class="fas fa-user"></i> Agente *
+                </label>
+                <select id="agentSelect" class="input-dark" required>
+                  <option value="">Seleccionar agente...</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-small" for="ticketId">
+                  <i class="fas fa-ticket-alt"></i> ID del Ticket *
+                </label>
+                <input type="text" id="ticketId" class="input-dark" required placeholder="TKT-12345">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div>
+                <label class="label-small" for="ticketDate">
+                  <i class="fas fa-calendar"></i> Fecha del Ticket *
+                </label>
+                <input type="date" id="ticketDate" class="input-dark" required>
+              </div>
+              <div>
+                <label class="label-small" for="auditDate">
+                  <i class="fas fa-calendar-check"></i> Fecha de Auditoría *
+                </label>
+                <input type="date" id="auditDate" class="input-dark" required>
+              </div>
+            </div>
+
+            <div>
+              <label class="label-small" for="tipificacion">
+                <i class="fas fa-tag"></i> Tipificación *
+              </label>
+              <input type="text" id="tipificacion" class="input-dark" required placeholder="Ej: Consulta de servicio">
+            </div>
+          </div>
+        </div>
+
+        <!-- Score Display (calculated automatically) -->
+        <input type="hidden" id="calculatedScore">
+        <input type="hidden" id="empatiaScore">
+        <input type="hidden" id="gestionScore">
+
+        <!-- Pilar Empatía (50%) -->
+        <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border-left: 4px solid #38CEA6;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; cursor: pointer;" onclick="App.toggleSection('empatiaSection')">
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: #38CEA6;">
+              <i class="fas fa-heart"></i> Pilar Empatía (50%)
+              <i id="empatiaToggleIcon" class="fas fa-chevron-up" style="margin-left: 0.5rem; font-size: 0.8rem;"></i>
+            </h3>
+            <div style="display: flex; gap: 0.5rem;" onclick="event.stopPropagation()">
+              <button type="button" class="btn-mini" onclick="App.toggleAllCheckboxes('empatia', true)" style="font-size: 0.75rem;">
+                <i class="fas fa-check-double"></i> Marcar todo
+              </button>
+              <button type="button" class="btn-mini" onclick="App.toggleAllCheckboxes('empatia', false)" style="font-size: 0.75rem; background: #fee2e2; color: #b91c1c;">
+                <i class="fas fa-times"></i> Limpiar
+              </button>
+            </div>
+          </div>
+          
+          <div id="empatiaSection">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 0.5rem;">
+              <div>
+                <span id="empatiaPercent" style="font-size: 1.5rem; font-weight: 700; color: #38CEA6;">0%</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"> DEL PILAR</span>
+              </div>
+              <div>
+                <span id="empatiaTotalPercent" style="font-size: 1.5rem; font-weight: 700; color: #38CEA6;">0%</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"> TOTAL</span>
+              </div>
+            </div>
+
+          <div style="display: grid; gap: 0.5rem;">
+            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="empatia" id="metodoRided" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
+              <div style="flex: 1;">
+                <strong>MÉTODO RIDED</strong>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Bienvenida, Indagación, Solución, Escucha Empática, Despedida.</div>
+              </div>
+            </label>
+            
+            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="empatia" id="lenguajePositivo" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
+              <div style="flex: 1;">
+                <strong>LENGUAJE POSITIVO</strong>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Reconocimiento del contexto y estado del cliente. Cortesía.</div>
+              </div>
+            </label>
+            
+            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="empatia" id="acompanamiento" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
+              <div style="flex: 1;">
+                <strong>ACOMPAÑAMIENTO</strong>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">No abandono. Gestión del tiempo de espera.</div>
+              </div>
+            </label>
+            
+            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="empatia" id="personalizacion" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
+              <div style="flex: 1;">
+                <strong>PERSONALIZACIÓN</strong>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Adaptación de plantillas. Evitar repetición.</div>
+              </div>
+            </label>
+            
+            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="empatia" id="estructura" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
+              <div style="flex: 1;">
+                <strong>ESTRUCTURA</strong>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Consolidación de mensajes y ritmo de conversación.</div>
+              </div>
+            </label>
+            
+            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="empatia" id="usoIaOrtografia" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
+              <div style="flex: 1;">
+                <strong>USO DE IA, ORTOGRAFÍA Y EMOJIS</strong>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Aplicación de IA, escritura correcta y comunicación visual adecuada.</div>
+              </div>
+            </label>
+          </div>
+          </div>
+        </div>
+
+        <!-- Pilar Gestión (50%) -->
+        <div style="background: #fef3f2; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; cursor: pointer;" onclick="App.toggleSection('gestionSection')">
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: #f59e0b;">
+              <i class="fas fa-cogs"></i> Pilar Gestión (50%)
+              <i id="gestionToggleIcon" class="fas fa-chevron-up" style="margin-left: 0.5rem; font-size: 0.8rem;"></i>
+            </h3>
+            <div style="display: flex; gap: 0.5rem;" onclick="event.stopPropagation()">
+              <button type="button" class="btn-mini" onclick="App.toggleAllCheckboxes('gestion', true)" style="font-size: 0.75rem;">
+                <i class="fas fa-check-double"></i> Marcar todo
+              </button>
+              <button type="button" class="btn-mini" onclick="App.toggleAllCheckboxes('gestion', false)" style="font-size: 0.75rem; background: #fee2e2; color: #b91c1c;">
+                <i class="fas fa-times"></i> Limpiar
+              </button>
+            </div>
+          </div>
+          
+          <div id="gestionSection">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 0.5rem;">
+              <div>
+                <span id="gestionPercent" style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">0%</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"> DEL PILAR</span>
+              </div>
+              <div>
+                <span id="gestionTotalPercent" style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">0%</span>
+              <span style="font-size: 0.85rem; color: var(--text-muted);"> TOTAL</span>
+            </div>
+          </div>
+
+          <!-- Gestión de ticket (33%) -->
+          <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h4 style="font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--text-primary);">
+                Gestión de ticket (33%)
+              </h4>
+              <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; cursor: pointer;">
+                <input type="checkbox" id="gestionTicketAll" onchange="App.toggleSubcategory('gestionTicket', this.checked)">
+                <span>Marcar</span>
+              </label>
+            </div>
+            <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="gestionTicket" id="estadosTicket" onchange="App.calculateScore()">
+                <span>Estados del Ticket - Proceso correcto en Zendesk.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="gestionTicket" id="ausenciaCliente" onchange="App.calculateScore()">
+                <span>Ausencia del Cliente - Manejo apropiado de no respuesta.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="gestionTicket" id="validacionHistorial" onchange="App.calculateScore()">
+                <span>Validación del Historial - Revisión de incidencias previas.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="gestionTicket" id="tipificacionCriterio" onchange="App.calculateScore()">
+                <span>Tipificación - Clasificación correcta del ticket.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="gestionTicket" id="retencionTickets" onchange="App.calculateScore()">
+                <span>Retención de Tickets - Mantener tickets activos apropiadamente.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoRespuesta" onchange="App.calculateScore()">
+                <span>Tiempo de Respuesta - Cumplimiento de tiempos.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoGestion" onchange="App.calculateScore()">
+                <span>Tiempo de Gestión - Eficiencia en el manejo.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Conocimiento Integral (33%) -->
+          <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h4 style="font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--text-primary);">
+                Conocimiento Integral de la marca (33%)
+              </h4>
+              <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; cursor: pointer;">
+                <input type="checkbox" id="conocimientoIntegralAll" onchange="App.toggleSubcategory('conocimientoIntegral', this.checked)">
+                <span>Marcar</span>
+              </label>
+            </div>
+            <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="serviciosPromociones" onchange="App.calculateScore()">
+                <span>Servicios y Promociones - Conocimiento completo de ofertas.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="informacionVeraz" onchange="App.calculateScore()">
+                <span>Información Veraz - Datos correctos y verificables.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="parlamentosContingencia" onchange="App.calculateScore()">
+                <span>Parlamentos de Contingencia - Guiones para situaciones difíciles.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="honestidadTransparencia" onchange="App.calculateScore()">
+                <span>Honestidad y Transparencia - Comunicación clara y directa.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Uso estratégico de herramientas (33%) -->
+          <div style="background: white; padding: 0.75rem; border-radius: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h4 style="font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--text-primary);">
+                Uso estratégico de herramientas (33%)
+              </h4>
+              <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; cursor: pointer;">
+                <input type="checkbox" id="herramientasAll" onchange="App.toggleSubcategory('herramientas', this.checked)">
+                <span>Marcar</span>
+              </label>
+            </div>
+            <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="herramientas" id="rideryOffice" onchange="App.calculateScore()">
+                <span>Ridery Office - Dominio de plataforma principal.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="herramientas" id="adminZendesk" onchange="App.calculateScore()">
+                <span>Admin y Zendesk - Herramientas administrativas.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="herramientas" id="driveManuales" onchange="App.calculateScore()">
+                <span>Drive y Manuales - Consulta de documentación.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="herramientas" id="slack" onchange="App.calculateScore()">
+                <span>Slack - Comunicación interna.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="herramientas" id="generacionReportes" onchange="App.calculateScore()">
+                <span>Generación de Reportes - Creación de informes.</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="gestion" class="herramientas" id="cargaIncidencias" onchange="App.calculateScore()">
+                <span>Carga de Incidencias - Registro apropiado.</span>
+              </label>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- Summary Scores -->
+        <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border: 2px solid #38CEA6;">
+          <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.75rem 0; color: var(--text-primary);">
+            <i class="fas fa-chart-pie"></i> Resumen de Evaluación
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+            <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Empatía</div>
+              <div id="empatiaFinalPercent" style="font-size: 1.5rem; font-weight: 700; color: #38CEA6;">0%</div>
+            </div>
+            <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Gestión</div>
+              <div id="gestionFinalPercent" style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">0%</div>
+            </div>
+            <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; text-align: center; grid-column: 1 / -1;">
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Puntuación Total</div>
+              <div id="totalScoreDisplay" style="font-size: 2rem; font-weight: 700; color: #10b981;">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Observations -->
+        <div style="margin-bottom: 1.5rem;">
+          <label class="label-small" for="ticketSummary">
+            <i class="fas fa-file-alt"></i> Resumen del Ticket *
+          </label>
+          <textarea id="ticketSummary" class="input-dark" rows="3" required placeholder="Breve resumen de la interacción y resolución..."></textarea>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label class="label-small" for="observations">
+            <i class="fas fa-comment"></i> Observaciones del Ticket
+          </label>
+          <textarea id="observations" class="input-dark" rows="4" placeholder="Observaciones adicionales, áreas de mejora, comentarios..."></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn-accent" style="flex: 1; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer; padding: 1rem;">
+            <i class="fas fa-save"></i> Guardar Auditoría
+          </button>
+          <button type="button" id="cancelModalBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer; padding: 1rem;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Audit View Modal (Read Only) -->
+  <div id="auditViewModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 1rem; border-bottom: 2px solid #f0f9ff;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-eye"></i> Detalle de Auditoría
+        </h2>
+        <button id="closeViewModalBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div id="auditViewContent">
+        <!-- Content will be populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Week Configuration Modal -->
+  <div id="weekConfigModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-cog"></i> Configurar Semanas del Mes
+        </h2>
+        <button id="closeWeekConfigBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+        <p style="margin: 0; font-size: 0.9rem; color: var(--text-primary);">
+          <i class="fas fa-info-circle" style="color: #38CEA6;"></i>
+          Configure los rangos de fechas para cada semana del mes seleccionado.
+        </p>
+      </div>
+
+      <div id="weekConfigContent">
+        <!-- Will be populated dynamically -->
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <button id="saveWeekConfigBtn" class="btn-accent" style="flex: 1; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer;">
+          <i class="fas fa-save"></i> Guardar Configuración
+        </button>
+        <button id="cancelWeekConfigBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Metrics Entry Modal -->
+  <div id="manualMetricsModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-edit"></i> Editar Métricas Manuales
+        </h2>
+        <button id="closeManualMetricsBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+        <p style="margin: 0; font-size: 0.9rem; color: var(--text-primary);">
+          <i class="fas fa-info-circle" style="color: #38CEA6;"></i>
+          <strong id="metricsAgentName">Agente</strong> - <span id="metricsWeekRange">Semana</span>
+        </p>
+      </div>
+
+      <form id="manualMetricsForm">
+        <input type="hidden" id="metricsYear">
+        <input type="hidden" id="metricsMonth">
+        <input type="hidden" id="metricsWeekIndex">
+        <input type="hidden" id="metricsAgentKey">
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <label class="label-small" for="metricTickets">
+              <i class="fas fa-ticket-alt"></i> Tickets
+            </label>
+            <input type="number" id="metricTickets" class="input-dark" min="0" step="1" value="0">
+          </div>
+          <div>
+            <label class="label-small" for="metricTicketsBad">
+              <i class="fas fa-frown"></i> Tickets con Satisfacción Mala
+            </label>
+            <input type="number" id="metricTicketsBad" class="input-dark" min="0" step="1" value="0">
+          </div>
+          <div>
+            <label class="label-small" for="metricTicketsGood">
+              <i class="fas fa-smile"></i> Tickets con Satisfacción Buena
+            </label>
+            <input type="number" id="metricTicketsGood" class="input-dark" min="0" step="1" value="0">
+          </div>
+          <div>
+            <label class="label-small" for="metricFirstResponse">
+              <i class="fas fa-clock"></i> Tiempo de Primera Respuesta (Seg)
+            </label>
+            <input type="number" id="metricFirstResponse" class="input-dark" min="0" step="0.1" value="0">
+          </div>
+          <div>
+            <label class="label-small" for="metricResolutionTime">
+              <i class="fas fa-hourglass-end"></i> Tiempo de Resolución Completa (Min)
+            </label>
+            <input type="number" id="metricResolutionTime" class="input-dark" min="0" step="0.1" value="0">
+          </div>
+          <div>
+            <label class="label-small" for="metricTicketsRated">
+              <i class="fas fa-percent"></i> % Tickets Calificados
+            </label>
+            <input type="number" id="metricTicketsRated" class="input-dark" min="0" max="100" step="0.1" value="0">
+          </div>
+        </div>
+
+        <div style="background: #fef3f2; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+          <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+            <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
+            El % Calidad se calcula automáticamente desde las auditorías registradas.
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn-accent" style="flex: 1; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer;">
+            <i class="fas fa-save"></i> Guardar Métricas
+          </button>
+          <button type="button" id="cancelManualMetricsBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="./assets/js/data.js"></script>
+  <script src="./assets/js/app.js"></script>
+</body>
+</html>
