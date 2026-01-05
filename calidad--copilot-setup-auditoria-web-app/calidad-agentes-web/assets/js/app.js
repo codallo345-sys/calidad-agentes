@@ -5,67 +5,6 @@ const App = {
   currentView: 'dashboard',
   charts: {},
 
-  // Notification system
-  showNotification(message, type = 'info', duration = 5000) {
-    const container = document.getElementById('notificationContainer');
-    if (!container) return;
-
-    const notification = document.createElement('div');
-    const notificationId = Date.now();
-    notification.id = `notification-${notificationId}`;
-    
-    const bgColors = {
-      success: '#10b981',
-      error: '#ef4444',
-      warning: '#f59e0b',
-      info: '#06b6d4'
-    };
-
-    const icons = {
-      success: 'check-circle',
-      error: 'exclamation-circle',
-      warning: 'exclamation-triangle',
-      info: 'info-circle'
-    };
-
-    notification.style.cssText = `
-      background: ${bgColors[type]};
-      color: white;
-      padding: 1rem 1.25rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      animation: slideInRight 0.3s ease-out;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-    `;
-
-    notification.innerHTML = `
-      <i class="fas fa-${icons[type]}" style="font-size: 1.2rem;"></i>
-      <span style="flex: 1;">${message}</span>
-      <i class="fas fa-times" style="opacity: 0.7; font-size: 0.9rem;"></i>
-    `;
-
-    notification.onclick = () => {
-      notification.style.animation = 'slideOutRight 0.3s ease-in';
-      setTimeout(() => notification.remove(), 300);
-    };
-
-    container.appendChild(notification);
-
-    if (duration > 0) {
-      setTimeout(() => {
-        if (notification.parentElement) {
-          notification.style.animation = 'slideOutRight 0.3s ease-in';
-          setTimeout(() => notification.remove(), 300);
-        }
-      }, duration);
-    }
-  },
-
   // Initialize application
   init() {
     // Check if user is logged in
@@ -602,11 +541,6 @@ const App = {
     // Load top agents
     this.loadTopAgents();
     
-    // Load team quality breakdown (only for editors)
-    if (isEditor) {
-      this.loadTeamQualityBreakdown();
-    }
-    
     // Load quality comparison chart (only for team users)
     if (userTeam && !isEditor) {
       this.loadQualityComparisonChart();
@@ -866,112 +800,6 @@ const App = {
     }
   },
 
-  loadTeamQualityBreakdown() {
-    const container = document.getElementById('teamQualityBreakdown');
-    if (!container) return;
-
-    const allAudits = DataManager.getAllAudits();
-    const teams = DataManager.getAllTeams();
-    
-    // Get current month audits
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const firstDayOfMonth = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
-    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-    const lastDayString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(lastDayOfMonth.getDate()).padStart(2, '0')}`;
-    
-    const currentMonthAudits = allAudits.filter(audit => {
-      return audit.date >= firstDayOfMonth && audit.date <= lastDayString;
-    });
-
-    if (currentMonthAudits.length === 0) {
-      container.innerHTML = '<p class="empty">No hay auditorías este mes</p>';
-      return;
-    }
-
-    // Calculate quality metrics by team
-    const teamMetrics = {};
-    
-    Object.entries(teams).forEach(([teamId, team]) => {
-      const teamMemberNames = team.members ? team.members.map(m => m.name) : [];
-      const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
-      
-      if (teamAudits.length > 0) {
-        // Calculate average scores
-        const empatiaTotal = teamAudits.reduce((sum, a) => sum + (parseFloat(a.empatiaScore) || 0), 0);
-        const gestionTotal = teamAudits.reduce((sum, a) => sum + (parseFloat(a.gestionScore) || 0), 0);
-        const calidadTotal = teamAudits.reduce((sum, a) => sum + (parseFloat(a.score) || 0), 0);
-        
-        teamMetrics[teamId] = {
-          team,
-          count: teamAudits.length,
-          empatiaAvg: Math.round(empatiaTotal / teamAudits.length),
-          gestionAvg: Math.round(gestionTotal / teamAudits.length),
-          calidadAvg: Math.round(calidadTotal / teamAudits.length)
-        };
-      }
-    });
-
-    if (Object.keys(teamMetrics).length === 0) {
-      container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
-      return;
-    }
-
-    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-    container.innerHTML = `
-      <div style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-        <i class="fas fa-calendar"></i> Datos acumulados de ${monthNames[currentMonth]} ${currentYear}
-      </div>
-      <div style="display: grid; gap: 1rem;">
-        ${Object.entries(teamMetrics).map(([teamId, metrics]) => `
-          <div style="border: 2px solid ${metrics.team.color}; border-radius: 0.75rem; padding: 1rem; background: linear-gradient(135deg, ${metrics.team.color}08, ${metrics.team.color}03);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-              <div>
-                <h4 style="font-size: 1rem; font-weight: 700; margin: 0; color: ${metrics.team.color};">
-                  <i class="fas fa-users"></i> ${metrics.team.name}
-                </h4>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
-                  ${metrics.count} auditorías realizadas
-                </div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Calidad Total</div>
-                <div style="font-size: 2rem; font-weight: 800; color: ${metrics.calidadAvg >= 80 ? '#10b981' : metrics.calidadAvg >= 60 ? '#f59e0b' : '#ef4444'};">
-                  ${metrics.calidadAvg}%
-                </div>
-              </div>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
-              <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; border-left: 3px solid #38CEA6;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                  <i class="fas fa-heart"></i> Pilar Empatía
-                </div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #38CEA6;">
-                  ${metrics.empatiaAvg}%
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted);">
-                  (50% del total)
-                </div>
-              </div>
-              <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; border-left: 3px solid #f59e0b;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                  <i class="fas fa-cogs"></i> Pilar Gestión
-                </div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">
-                  ${metrics.gestionAvg}%
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted);">
-                  (50% del total)
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  },
   
   loadQualityComparisonChart() {
     const user = DataManager.getCurrentUser();
@@ -1351,6 +1179,7 @@ const App = {
         document.getElementById('auditDate').value = audit.date;
         document.getElementById('tipificacion').value = audit.tipificacion || '';
         document.getElementById('ticketSummary').value = audit.ticketSummary || '';
+        document.getElementById('observations').value = audit.observations || '';
         document.getElementById('calculatedScore').value = audit.score || 0;
         
         // Load evaluation data if exists
@@ -1382,17 +1211,6 @@ const App = {
         
         // Recalculate score with loaded data
         this.calculateScore();
-        
-        // Update observation icons based on checkbox states
-        const allCriteriaIds = [
-          'metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia',
-          'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion',
-          'serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia',
-          'rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'
-        ];
-        allCriteriaIds.forEach(id => {
-          this.toggleObservationIcon(id);
-        });
       }
     } else {
       modalTitle.textContent = 'Nueva Auditoría de Chat';
@@ -1403,20 +1221,6 @@ const App = {
       document.getElementById('ticketDate').value = today;
       document.getElementById('calculatedScore').value = 0;
       this.calculateScore();
-      
-      // Hide all observation icons initially (since all checkboxes are unchecked in new audit)
-      const allCriteriaIds = [
-        'metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia',
-        'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion',
-        'serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia',
-        'rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'
-      ];
-      allCriteriaIds.forEach(id => {
-        const icon = document.getElementById(`icon-${id}`);
-        if (icon) icon.style.display = 'none';
-        const obsField = document.getElementById(`obs-${id}`);
-        if (obsField) obsField.style.display = 'none';
-      });
     }
     
     modal.classList.remove('hidden');
@@ -1504,6 +1308,7 @@ const App = {
       date: document.getElementById('auditDate').value,
       tipificacion: document.getElementById('tipificacion').value,
       ticketSummary: document.getElementById('ticketSummary').value,
+      observations: document.getElementById('observations').value,
       score: parseFloat(document.getElementById('calculatedScore').value) || 0,
       empatiaScore: parseFloat(document.getElementById('empatiaScore').value) || 0,
       gestionScore: parseFloat(document.getElementById('gestionScore').value) || 0,
@@ -1515,10 +1320,8 @@ const App = {
 
     if (auditId) {
       DataManager.updateAudit(auditId, auditData);
-      this.showNotification('Auditoría actualizada exitosamente', 'success');
     } else {
       DataManager.createAudit(auditData);
-      this.showNotification('✅ Nueva auditoría publicada y notificada al agente', 'success');
     }
 
     this.closeAuditModal();
@@ -1555,26 +1358,10 @@ const App = {
     const currentUser = DataManager.getCurrentUser();
     const isEditor = DataManager.isEditor();
     
-    // Mark as viewed ONLY if current user is the agent (not editor viewing it)
-    // Check if current user's email matches the agent's email or agent name
+    // Mark as viewed by current user
+    DataManager.markAuditAsViewed(auditId, currentUser.email);
+    
     const teams = DataManager.getAllTeams();
-    let isAgentOfThisAudit = false;
-    Object.values(teams).forEach(team => {
-      if (team.members) {
-        const member = team.members.find(m => 
-          m.name === audit.agentName || m.email === currentUser.email
-        );
-        if (member && member.name === audit.agentName) {
-          isAgentOfThisAudit = true;
-        }
-      }
-    });
-    
-    // Only mark as viewed if the person viewing is the agent themselves
-    if (isAgentOfThisAudit && !isEditor) {
-      DataManager.markAuditAsViewed(auditId, currentUser.email);
-    }
-    
     const team = teams[audit.teamId];
     const teamName = team ? team.name : 'N/A';
 
@@ -1812,14 +1599,14 @@ const App = {
     const success = DataManager.addAuditComment(auditId, commentText, currentUser.email, audit.agentName);
     
     if (success) {
-      // Show notification to editor
-      this.showNotification(`💬 Nuevo comentario de ${audit.agentName} en auditoría`, 'info', 7000);
+      // Simulate email notification to editor (in real app, this would be a backend call)
+      console.log(`📧 Email notification sent to editor: New comment from ${audit.agentName} on audit ${auditId}`);
       
       // Refresh the view
       this.viewAudit(auditId);
-      this.showNotification('Comentario agregado exitosamente', 'success');
+      alert('Comentario agregado exitosamente. Se ha notificado al editor.');
     } else {
-      this.showNotification('Error al agregar el comentario', 'error');
+      alert('Error al agregar el comentario');
     }
   },
 
@@ -2502,34 +2289,16 @@ const App = {
     return checked;
   },
 
-  toggleObservationIcon(criterionId) {
+  toggleObservationField(criterionId) {
     const checkbox = document.getElementById(criterionId);
-    const icon = document.getElementById(`icon-${criterionId}`);
     const obsField = document.getElementById(`obs-${criterionId}`);
     
-    if (checkbox && icon) {
-      // Show pencil icon if checkbox is NOT checked
+    if (checkbox && obsField) {
+      // Show observation field if checkbox is NOT checked
       if (checkbox.checked) {
-        icon.style.display = 'none';
-        // Also hide textarea if it was open
-        if (obsField) {
-          obsField.style.display = 'none';
-        }
-      } else {
-        icon.style.display = 'block';
-      }
-    }
-  },
-
-  toggleObservationTextarea(criterionId) {
-    const obsField = document.getElementById(`obs-${criterionId}`);
-    
-    if (obsField) {
-      // Toggle textarea visibility
-      if (obsField.style.display === 'none' || obsField.style.display === '') {
-        obsField.style.display = 'block';
-      } else {
         obsField.style.display = 'none';
+      } else {
+        obsField.style.display = 'block';
       }
     }
   },
