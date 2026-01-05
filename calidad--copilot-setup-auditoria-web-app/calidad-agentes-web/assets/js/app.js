@@ -2618,8 +2618,8 @@ const App = {
     
     lines.forEach((line, lineNum) => {
       try {
-        // Split by tab or multiple spaces
-        const parts = line.split(/\t+|\s{2,}/).map(p => p.trim()).filter(p => p);
+        // Split by tab, comma, or multiple spaces - handle various Excel paste formats
+        const parts = line.split(/[\t,]+|\s{2,}/).map(p => p.trim()).filter(p => p);
         
         if (parts.length < 2) {
           errors.push(`Línea ${lineNum + 1}: Faltan datos (necesita al menos Agente y Tickets)`);

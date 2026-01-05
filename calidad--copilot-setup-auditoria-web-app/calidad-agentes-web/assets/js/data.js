@@ -241,7 +241,7 @@ const DataManager = {
       }
       if (!audit.viewedBy.includes(userEmail)) {
         audit.viewedBy.push(userEmail);
-        audit.viewedAt = new Date().toISOString();
+        audit.lastViewedAt = new Date().toISOString();
       }
       localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify(audits));
       return true;
