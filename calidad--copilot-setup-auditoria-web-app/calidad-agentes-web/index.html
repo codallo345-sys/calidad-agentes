@@ -975,6 +975,62 @@
     </div>
   </div>
 
+  <!-- Add Team Member Modal -->
+  <div id="addMemberModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 500px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-user-plus"></i> Agregar Integrante
+        </h2>
+        <button id="closeAddMemberBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="addMemberForm">
+        <input type="hidden" id="addMemberTeamId">
+        <div style="margin-bottom: 1rem; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem; border-left: 3px solid #38CEA6;">
+          <div style="font-weight: 600; color: var(--text-primary);" id="addMemberTeamName"></div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="label-small" for="memberName">
+            <i class="fas fa-user"></i> Nombre Completo
+          </label>
+          <input type="text" id="memberName" class="input-dark" required placeholder="Ej: María González">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="label-small" for="memberEmail">
+            <i class="fas fa-envelope"></i> Correo Electrónico
+          </label>
+          <input type="email" id="memberEmail" class="input-dark" required placeholder="Ej: maria.gonzalez@ridery.com">
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label class="label-small" for="memberShift">
+            <i class="fas fa-clock"></i> Turno del Integrante
+          </label>
+          <select id="memberShift" class="input-dark" required>
+            <option value="">Seleccionar turno...</option>
+            <option value="AM">Turno Matutino (AM)</option>
+            <option value="PM">Turno Vespertino (PM)</option>
+            <option value="Weekend">Fin de Semana</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn-accent" style="flex: 1; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer;">
+            <i class="fas fa-check"></i> Agregar Integrante
+          </button>
+          <button type="button" id="cancelAddMemberBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="./assets/js/data.js"></script>
   <script src="./assets/js/app.js"></script>
 </body>

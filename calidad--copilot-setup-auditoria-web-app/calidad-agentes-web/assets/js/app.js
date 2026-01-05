@@ -218,6 +218,31 @@ const App = {
         }
       });
     }
+
+    // Add Member Modal
+    const addMemberForm = document.getElementById('addMemberForm');
+    if (addMemberForm) {
+      addMemberForm.addEventListener('submit', (e) => this.handleAddMemberSubmit(e));
+    }
+
+    const closeAddMemberBtn = document.getElementById('closeAddMemberBtn');
+    if (closeAddMemberBtn) {
+      closeAddMemberBtn.addEventListener('click', () => this.closeAddMemberModal());
+    }
+
+    const cancelAddMemberBtn = document.getElementById('cancelAddMemberBtn');
+    if (cancelAddMemberBtn) {
+      cancelAddMemberBtn.addEventListener('click', () => this.closeAddMemberModal());
+    }
+
+    const addMemberModal = document.getElementById('addMemberModal');
+    if (addMemberModal) {
+      addMemberModal.addEventListener('click', (e) => {
+        if (e.target === addMemberModal) {
+          this.closeAddMemberModal();
+        }
+      });
+    }
   },
   
   // Setup keyboard navigation for table scrolling
@@ -639,15 +664,15 @@ const App = {
           }))
           .sort((a, b) => b.avgScore - a.avgScore);
         
-        // Get top 2 best and bottom 3 lowest
-        const top2 = sortedAgents.slice(0, 2);
-        const bottom3 = sortedAgents.length > 2 ? sortedAgents.slice(-3).reverse() : [];
+        // Get top 2 best (>= 81%) and agents below 81% that need improvement
+        const top2 = sortedAgents.filter(a => a.avgScore >= 81).slice(0, 2);
+        const needsImprovement = sortedAgents.filter(a => a.avgScore < 81);
         
-        teamRankings[teamId] = { team, top2, bottom3 };
+        teamRankings[teamId] = { team, top2, needsImprovement };
       });
       
       container.innerHTML = Object.entries(teamRankings).map(([teamId, data]) => {
-        if (!data.top2.length && !data.bottom3.length) return '';
+        if (!data.top2.length && !data.needsImprovement.length) return '';
         
         return `
           <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid ${data.team.color};">
@@ -657,7 +682,7 @@ const App = {
             ${data.top2.length > 0 ? `
               <div style="margin-bottom: 0.75rem;">
                 <div style="font-size: 0.8rem; font-weight: 600; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                  <i class="fas fa-trophy"></i> Mejores Agentes
+                  <i class="fas fa-trophy"></i> Mejores Agentes (≥81%)
                 </div>
                 ${data.top2.map((agent, index) => `
                   <div style="padding: 0.4rem 0.5rem; display: flex; justify-content: space-between; align-items: center; background: ${index === 0 ? '#f0fdf4' : '#f0f9ff'}; border-radius: 0.375rem; margin-bottom: 0.25rem;">
@@ -673,12 +698,12 @@ const App = {
                 `).join('')}
               </div>
             ` : ''}
-            ${data.bottom3.length > 0 ? `
+            ${data.needsImprovement.length > 0 ? `
               <div>
                 <div style="font-size: 0.8rem; font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                  <i class="fas fa-exclamation-triangle"></i> Con Oportunidad de Mejora
+                  <i class="fas fa-exclamation-triangle"></i> Se Puede Mejorar (&lt;81%)
                 </div>
-                ${data.bottom3.map((agent, index) => `
+                ${data.needsImprovement.map((agent) => `
                   <div style="padding: 0.4rem 0.5rem; display: flex; justify-content: space-between; align-items: center; background: #fef3f2; border-radius: 0.375rem; margin-bottom: 0.25rem;">
                     <div>
                       <span style="font-size: 1rem; margin-right: 0.5rem;">📊</span>
@@ -721,11 +746,11 @@ const App = {
         }))
         .sort((a, b) => b.avgScore - a.avgScore);
       
-      // Get top 2 best and bottom 3 lowest
-      const top2 = sortedAgents.slice(0, 2);
-      const bottom3 = sortedAgents.length > 2 ? sortedAgents.slice(-3).reverse() : [];
+      // Get top 2 best (>= 81%) and agents below 81% that need improvement
+      const top2 = sortedAgents.filter(a => a.avgScore >= 81).slice(0, 2);
+      const needsImprovement = sortedAgents.filter(a => a.avgScore < 81);
       
-      if (top2.length === 0 && bottom3.length === 0) {
+      if (top2.length === 0 && needsImprovement.length === 0) {
         container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
         return;
       }
@@ -734,7 +759,7 @@ const App = {
         ${top2.length > 0 ? `
           <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.8rem; font-weight: 600; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-              <i class="fas fa-trophy"></i> Mejores Agentes
+              <i class="fas fa-trophy"></i> Mejores Agentes (≥81%)
             </div>
             ${top2.map((agent, index) => `
               <div style="padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; background: ${index === 0 ? '#f0fdf4' : '#f0f9ff'}; border-radius: 0.375rem; margin-bottom: 0.5rem;">
@@ -752,12 +777,12 @@ const App = {
             `).join('')}
           </div>
         ` : ''}
-        ${bottom3.length > 0 ? `
+        ${needsImprovement.length > 0 ? `
           <div>
             <div style="font-size: 0.8rem; font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-              <i class="fas fa-exclamation-triangle"></i> Con Oportunidad de Mejora
+              <i class="fas fa-exclamation-triangle"></i> Se Puede Mejorar (&lt;81%)
             </div>
-            ${bottom3.map((agent) => `
+            ${needsImprovement.map((agent) => `
               <div style="padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; background: #fef3f2; border-radius: 0.375rem; margin-bottom: 0.5rem;">
                 <div>
                   <span style="font-size: 1rem; margin-right: 0.5rem;">📊</span>
@@ -1161,26 +1186,45 @@ const App = {
     const team = DataManager.getTeamById(teamId);
     if (!team) return;
     
-    const name = prompt(`Agregar integrante a ${team.name}\n\nNombre completo:`);
-    if (!name || !name.trim()) return;
+    document.getElementById('addMemberTeamId').value = teamId;
+    document.getElementById('addMemberTeamName').textContent = team.name;
+    document.getElementById('memberName').value = '';
+    document.getElementById('memberEmail').value = '';
+    document.getElementById('memberShift').value = '';
     
-    const email = prompt(`Email del integrante:`);
-    if (!email || !email.trim() || !email.includes('@')) {
+    document.getElementById('addMemberModal').classList.remove('hidden');
+  },
+
+  closeAddMemberModal() {
+    document.getElementById('addMemberModal').classList.add('hidden');
+  },
+
+  handleAddMemberSubmit(e) {
+    e.preventDefault();
+    
+    const teamId = document.getElementById('addMemberTeamId').value;
+    const name = document.getElementById('memberName').value.trim();
+    const email = document.getElementById('memberEmail').value.toLowerCase().trim();
+    const shift = document.getElementById('memberShift').value;
+    
+    if (!name || !email || !shift) {
+      alert('Por favor complete todos los campos');
+      return;
+    }
+    
+    if (!email.includes('@')) {
       alert('Por favor ingrese un email válido');
       return;
     }
     
-    const shift = prompt(`Turno del integrante:\n\nEscriba: AM, PM o Weekend`);
-    const validShifts = ['AM', 'PM', 'Weekend'];
-    const shiftValue = shift && validShifts.includes(shift.trim()) ? shift.trim() : 'AM';
-    
     const success = DataManager.addTeamMember(teamId, {
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      shift: shiftValue
+      name,
+      email,
+      shift
     });
     
     if (success) {
+      this.closeAddMemberModal();
       this.loadTeamsView();
       alert('Integrante agregado exitosamente');
     } else {
