@@ -972,8 +972,6 @@ const App = {
       </div>
     `;
   },
-
-  },
   
   loadQualityComparisonChart() {
     const user = DataManager.getCurrentUser();
