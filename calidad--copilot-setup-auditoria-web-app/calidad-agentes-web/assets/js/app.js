@@ -167,6 +167,27 @@ const App = {
       manualMetricsForm.addEventListener('submit', (e) => this.handleManualMetricsSubmit(e));
     }
     
+    // Bulk paste metrics
+    const bulkPasteMetricsBtn = document.getElementById('bulkPasteMetricsBtn');
+    if (bulkPasteMetricsBtn) {
+      bulkPasteMetricsBtn.addEventListener('click', () => this.openBulkPasteModal());
+    }
+    
+    const closeBulkPasteBtn = document.getElementById('closeBulkPasteBtn');
+    if (closeBulkPasteBtn) {
+      closeBulkPasteBtn.addEventListener('click', () => this.closeBulkPasteModal());
+    }
+    
+    const cancelBulkPasteBtn = document.getElementById('cancelBulkPasteBtn');
+    if (cancelBulkPasteBtn) {
+      cancelBulkPasteBtn.addEventListener('click', () => this.closeBulkPasteModal());
+    }
+    
+    const bulkPasteForm = document.getElementById('bulkPasteForm');
+    if (bulkPasteForm) {
+      bulkPasteForm.addEventListener('submit', (e) => this.handleBulkPasteSubmit(e));
+    }
+    
     // Keyboard navigation for table scrolling
     this.setupTableKeyboardNavigation();
 
@@ -185,6 +206,15 @@ const App = {
       manualMetricsModal.addEventListener('click', (e) => {
         if (e.target === manualMetricsModal) {
           this.closeManualMetricsModal();
+        }
+      });
+    }
+    
+    const bulkPasteModal = document.getElementById('bulkPasteModal');
+    if (bulkPasteModal) {
+      bulkPasteModal.addEventListener('click', (e) => {
+        if (e.target === bulkPasteModal) {
+          this.closeBulkPasteModal();
         }
       });
     }
@@ -2530,6 +2560,115 @@ const App = {
     
     // Optionally reload to show changes (but not necessary as the input already shows the new value)
     // this.loadMonthlyMetrics();
+  },
+
+  // Bulk Paste Modal
+  openBulkPasteModal() {
+    const filterMonthMetrics = document.getElementById('filterMonthMetrics');
+    const selectedMonth = filterMonthMetrics ? filterMonthMetrics.value : '';
+    
+    if (!selectedMonth) {
+      alert('Por favor seleccione un mes primero');
+      return;
+    }
+    
+    const year = new Date().getFullYear();
+    const month = parseInt(selectedMonth);
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    
+    const weeks = DataManager.getWeekConfig(year, month);
+    const weekSelect = document.getElementById('bulkPasteWeek');
+    weekSelect.innerHTML = weeks.map((week, index) => 
+      `<option value="${index}">Semana ${index + 1}: ${week.startDate} al ${week.endDate}</option>`
+    ).join('');
+    
+    document.getElementById('bulkPasteMonthYear').value = `${monthNames[month]} ${year}`;
+    document.getElementById('bulkPasteData').value = '';
+    
+    document.getElementById('bulkPasteModal').classList.remove('hidden');
+  },
+
+  closeBulkPasteModal() {
+    document.getElementById('bulkPasteModal').classList.add('hidden');
+  },
+
+  handleBulkPasteSubmit(e) {
+    e.preventDefault();
+    
+    const filterMonthMetrics = document.getElementById('filterMonthMetrics');
+    const selectedMonth = filterMonthMetrics ? filterMonthMetrics.value : '';
+    const year = new Date().getFullYear();
+    const month = parseInt(selectedMonth);
+    const weekIndex = parseInt(document.getElementById('bulkPasteWeek').value);
+    const pastedData = document.getElementById('bulkPasteData').value.trim();
+    
+    if (!pastedData) {
+      alert('Por favor pegue los datos de Excel');
+      return;
+    }
+    
+    // Parse the pasted data - expect tab or multiple spaces separated values
+    const lines = pastedData.split('\n').filter(line => line.trim());
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    // Get current data
+    const allData = DataManager.getWeeklyMetricsData(year, month);
+    
+    lines.forEach((line, lineNum) => {
+      try {
+        // Split by tab or multiple spaces
+        const parts = line.split(/\t+|\s{2,}/).map(p => p.trim()).filter(p => p);
+        
+        if (parts.length < 2) {
+          errors.push(`Línea ${lineNum + 1}: Faltan datos (necesita al menos Agente y Tickets)`);
+          errorCount++;
+          return;
+        }
+        
+        const agentName = parts[0];
+        const tickets = parseInt(parts[1]) || 0;
+        const ticketsPerHour = parseFloat(parts[2]) || 0;
+        const ticketsBad = parseInt(parts[3]) || 0;
+        const ticketsGood = parseInt(parts[4]) || 0;
+        const firstResponse = parseFloat(parts[5]) || 0;
+        const resolutionTime = parseFloat(parts[6]) || 0;
+        
+        // Initialize agent data if doesn't exist
+        if (!allData[agentName]) {
+          allData[agentName] = {};
+        }
+        
+        // Save metrics for this week
+        allData[agentName][weekIndex] = {
+          tickets,
+          ticketsPerHour,
+          ticketsBad,
+          ticketsGood,
+          firstResponse,
+          resolutionTime
+        };
+        
+        successCount++;
+      } catch (error) {
+        errors.push(`Línea ${lineNum + 1}: ${error.message}`);
+        errorCount++;
+      }
+    });
+    
+    // Save back to storage
+    DataManager.saveWeeklyMetricsData(year, month, allData);
+    
+    this.closeBulkPasteModal();
+    this.loadWeeklyMetrics();
+    
+    let message = `✓ ${successCount} agente(s) cargado(s) exitosamente`;
+    if (errorCount > 0) {
+      message += `\n\n⚠ ${errorCount} error(es):\n${errors.join('\n')}`;
+    }
+    
+    alert(message);
   }
 };
 
