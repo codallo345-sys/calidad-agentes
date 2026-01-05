@@ -231,6 +231,45 @@ const DataManager = {
     return true;
   },
 
+  // Mark audit as viewed by agent
+  markAuditAsViewed(auditId, userEmail) {
+    const audits = this.getAllAudits();
+    const audit = audits.find(a => a.id === auditId);
+    if (audit) {
+      if (!audit.viewedBy) {
+        audit.viewedBy = [];
+      }
+      if (!audit.viewedBy.includes(userEmail)) {
+        audit.viewedBy.push(userEmail);
+        audit.viewedAt = new Date().toISOString();
+      }
+      localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify(audits));
+      return true;
+    }
+    return false;
+  },
+
+  // Add comment to audit
+  addAuditComment(auditId, commentText, userEmail, userName) {
+    const audits = this.getAllAudits();
+    const audit = audits.find(a => a.id === auditId);
+    if (audit) {
+      if (!audit.comments) {
+        audit.comments = [];
+      }
+      audit.comments.push({
+        id: this.generateId(),
+        text: commentText,
+        author: userName,
+        authorEmail: userEmail,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify(audits));
+      return true;
+    }
+    return false;
+  },
+
   // Get audits by month
   getAuditsByMonth(year, month) {
     const audits = this.getAllAudits();

@@ -902,10 +902,11 @@ const App = {
   renderAuditsTable(audits) {
     const tbody = document.getElementById('auditsTableBody');
     const isEditor = DataManager.isEditor();
+    const currentUser = DataManager.getCurrentUser();
     const teams = DataManager.getAllTeams();
     
     if (audits.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="12" class="empty">No se encontraron auditorías</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="13" class="empty">No se encontraron auditorías</td></tr>`;
       return;
     }
 
@@ -920,6 +921,10 @@ const App = {
       const gestionScore = audit.gestionScore || 0;
       const totalScore = audit.score || 0;
       const tipificacion = audit.tipificacion || '-';
+      
+      // Check if current user has viewed this audit
+      const hasViewed = audit.viewedBy && audit.viewedBy.includes(currentUser.email);
+      const commentCount = audit.comments ? audit.comments.length : 0;
       
       // Truncate long text for display but keep full text in title
       const truncate = (text, maxLen) => {
@@ -938,6 +943,10 @@ const App = {
           <td style="text-align: center; min-width: 70px;"><strong style="color: #38CEA6; font-size: 0.95rem;">${empatiaScore}%</strong></td>
           <td style="text-align: center; min-width: 70px;"><strong style="color: #f59e0b; font-size: 0.95rem;">${gestionScore}%</strong></td>
           <td style="text-align: center; min-width: 60px;"><strong style="color: #10b981; font-size: 1rem;">${totalScore}</strong></td>
+          <td style="text-align: center; min-width: 80px;">
+            <i class="fas fa-eye" style="font-size: 1.2rem; color: ${hasViewed ? '#10b981' : '#d1d5db'};" title="${hasViewed ? 'Visto por el agente' : 'No visto'}"></i>
+            ${commentCount > 0 ? `<span style="margin-left: 0.5rem; background: #38CEA6; color: white; border-radius: 50%; padding: 0.15rem 0.4rem; font-size: 0.7rem; font-weight: 700;">${commentCount}</span>` : ''}
+          </td>
           <td style="min-width: 250px; max-width: 350px; white-space: normal; font-size: 0.85rem; line-height: 1.4;" title="${audit.ticketSummary || ''}">
             ${truncate(audit.ticketSummary, 100) || '-'}
           </td>
@@ -1250,6 +1259,12 @@ const App = {
     const audit = DataManager.getAuditById(auditId);
     if (!audit) return;
 
+    const currentUser = DataManager.getCurrentUser();
+    const isEditor = DataManager.isEditor();
+    
+    // Mark as viewed by current user
+    DataManager.markAuditAsViewed(auditId, currentUser.email);
+    
     const teams = DataManager.getAllTeams();
     const team = teams[audit.teamId];
     const teamName = team ? team.name : 'N/A';
@@ -1336,6 +1351,22 @@ const App = {
       });
       gestionHTML += '</div></div>';
     });
+
+    // Build comments section
+    let commentsHTML = '';
+    if (audit.comments && audit.comments.length > 0) {
+      commentsHTML = audit.comments.map(comment => `
+        <div style="background: white; padding: 1rem; border-radius: 0.5rem; border-left: 3px solid #38CEA6; margin-bottom: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+            <div style="font-weight: 600; color: var(--text-primary);">${comment.author}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">${DataManager.formatDate(comment.createdAt)}</div>
+          </div>
+          <div style="color: var(--text-primary); line-height: 1.6; white-space: pre-wrap;">${comment.text}</div>
+        </div>
+      `).join('');
+    } else {
+      commentsHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">No hay comentarios aún</p>';
+    }
 
     const content = `
       <div style="display: grid; gap: 1.5rem;">
@@ -1428,15 +1459,59 @@ const App = {
             </div>
           </div>
         </div>
+
+        <!-- Comments Section -->
+        <div style="background: #f9fafb; padding: 1.5rem; border-radius: 0.75rem;">
+          <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--text-primary);">
+            <i class="fas fa-comments"></i> Comentarios del Agente
+          </h3>
+          ${commentsHTML}
+          ${!isEditor ? `
+            <div style="margin-top: 1rem;">
+              <textarea id="newCommentText" class="input-dark" rows="3" placeholder="Escribe tu comentario aquí..."></textarea>
+              <button onclick="App.addComment('${auditId}')" class="btn-accent" style="margin-top: 0.5rem; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer; width: 100%;">
+                <i class="fas fa-paper-plane"></i> Enviar Comentario
+              </button>
+            </div>
+          ` : ''}
+        </div>
       </div>
     `;
 
     document.getElementById('auditViewContent').innerHTML = content;
     document.getElementById('auditViewModal').classList.remove('hidden');
+    
+    // Refresh the audits table to update viewed status
+    this.loadAuditsView();
   },
 
   closeViewModal() {
     document.getElementById('auditViewModal').classList.add('hidden');
+  },
+
+  addComment(auditId) {
+    const commentText = document.getElementById('newCommentText').value.trim();
+    if (!commentText) {
+      alert('Por favor escriba un comentario');
+      return;
+    }
+
+    const currentUser = DataManager.getCurrentUser();
+    const audit = DataManager.getAuditById(auditId);
+    
+    // Add comment to audit
+    const success = DataManager.addAuditComment(auditId, commentText, currentUser.email, audit.agentName);
+    
+    if (success) {
+      // Simulate email notification to editor (in real app, this would be a backend call)
+      console.log(`📧 Email notification sent to editor: New comment from ${audit.agentName} on audit ${auditId}`);
+      
+      // Refresh the view
+      this.viewAudit(auditId);
+      alert('Comentario agregado exitosamente. Se ha notificado al editor.');
+    } else {
+      alert('Error al agregar el comentario');
+    }
   },
 
   // Weekly Metrics
