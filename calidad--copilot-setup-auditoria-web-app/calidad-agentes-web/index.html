@@ -643,34 +643,69 @@
               </label>
             </div>
             <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="estadosTicket" onchange="App.calculateScore()">
-                <span>Estados del Ticket - Proceso correcto en Zendesk.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="ausenciaCliente" onchange="App.calculateScore()">
-                <span>Ausencia del Cliente - Manejo apropiado de no respuesta.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="validacionHistorial" onchange="App.calculateScore()">
-                <span>Validación del Historial - Revisión de incidencias previas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tipificacionCriterio" onchange="App.calculateScore()">
-                <span>Tipificación - Clasificación correcta del ticket.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="retencionTickets" onchange="App.calculateScore()">
-                <span>Retención de Tickets - Mantener tickets activos apropiadamente.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoRespuesta" onchange="App.calculateScore()">
-                <span>Tiempo de Respuesta - Cumplimiento de tiempos.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoGestion" onchange="App.calculateScore()">
-                <span>Tiempo de Gestión - Eficiencia en el manejo.</span>
-              </label>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="estadosTicket" onchange="App.toggleObservationField('estadosTicket'); App.calculateScore()">
+                  <span>Estados del Ticket - Proceso correcto en Zendesk.</span>
+                </label>
+                <div id="obs-estadosTicket" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="ausenciaCliente" onchange="App.toggleObservationField('ausenciaCliente'); App.calculateScore()">
+                  <span>Ausencia del Cliente - Manejo apropiado de no respuesta.</span>
+                </label>
+                <div id="obs-ausenciaCliente" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="validacionHistorial" onchange="App.toggleObservationField('validacionHistorial'); App.calculateScore()">
+                  <span>Validación del Historial - Revisión de incidencias previas.</span>
+                </label>
+                <div id="obs-validacionHistorial" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tipificacionCriterio" onchange="App.toggleObservationField('tipificacionCriterio'); App.calculateScore()">
+                  <span>Tipificación - Clasificación correcta del ticket.</span>
+                </label>
+                <div id="obs-tipificacionCriterio" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="retencionTickets" onchange="App.toggleObservationField('retencionTickets'); App.calculateScore()">
+                  <span>Retención de Tickets - Mantener tickets activos apropiadamente.</span>
+                </label>
+                <div id="obs-retencionTickets" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoRespuesta" onchange="App.toggleObservationField('tiempoRespuesta'); App.calculateScore()">
+                  <span>Tiempo de Respuesta - Cumplimiento de tiempos.</span>
+                </label>
+                <div id="obs-tiempoRespuesta" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoGestion" onchange="App.toggleObservationField('tiempoGestion'); App.calculateScore()">
+                  <span>Tiempo de Gestión - Eficiencia en el manejo.</span>
+                </label>
+                <div id="obs-tiempoGestion" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -686,22 +721,42 @@
               </label>
             </div>
             <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="serviciosPromociones" onchange="App.calculateScore()">
-                <span>Servicios y Promociones - Conocimiento completo de ofertas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="informacionVeraz" onchange="App.calculateScore()">
-                <span>Información Veraz - Datos correctos y verificables.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="parlamentosContingencia" onchange="App.calculateScore()">
-                <span>Parlamentos de Contingencia - Guiones para situaciones difíciles.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="honestidadTransparencia" onchange="App.calculateScore()">
-                <span>Honestidad y Transparencia - Comunicación clara y directa.</span>
-              </label>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="serviciosPromociones" onchange="App.toggleObservationField('serviciosPromociones'); App.calculateScore()">
+                  <span>Servicios y Promociones - Conocimiento completo de ofertas.</span>
+                </label>
+                <div id="obs-serviciosPromociones" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="informacionVeraz" onchange="App.toggleObservationField('informacionVeraz'); App.calculateScore()">
+                  <span>Información Veraz - Datos correctos y verificables.</span>
+                </label>
+                <div id="obs-informacionVeraz" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="parlamentosContingencia" onchange="App.toggleObservationField('parlamentosContingencia'); App.calculateScore()">
+                  <span>Parlamentos de Contingencia - Guiones para situaciones difíciles.</span>
+                </label>
+                <div id="obs-parlamentosContingencia" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="honestidadTransparencia" onchange="App.toggleObservationField('honestidadTransparencia'); App.calculateScore()">
+                  <span>Honestidad y Transparencia - Comunicación clara y directa.</span>
+                </label>
+                <div id="obs-honestidadTransparencia" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -717,30 +772,60 @@
               </label>
             </div>
             <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="rideryOffice" onchange="App.calculateScore()">
-                <span>Ridery Office - Dominio de plataforma principal.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="adminZendesk" onchange="App.calculateScore()">
-                <span>Admin y Zendesk - Herramientas administrativas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="driveManuales" onchange="App.calculateScore()">
-                <span>Drive y Manuales - Consulta de documentación.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="slack" onchange="App.calculateScore()">
-                <span>Slack - Comunicación interna.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="generacionReportes" onchange="App.calculateScore()">
-                <span>Generación de Reportes - Creación de informes.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="cargaIncidencias" onchange="App.calculateScore()">
-                <span>Carga de Incidencias - Registro apropiado.</span>
-              </label>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="rideryOffice" onchange="App.toggleObservationField('rideryOffice'); App.calculateScore()">
+                  <span>Ridery Office - Dominio de plataforma principal.</span>
+                </label>
+                <div id="obs-rideryOffice" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="adminZendesk" onchange="App.toggleObservationField('adminZendesk'); App.calculateScore()">
+                  <span>Admin y Zendesk - Herramientas administrativas.</span>
+                </label>
+                <div id="obs-adminZendesk" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="driveManuales" onchange="App.toggleObservationField('driveManuales'); App.calculateScore()">
+                  <span>Drive y Manuales - Consulta de documentación.</span>
+                </label>
+                <div id="obs-driveManuales" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="slack" onchange="App.toggleObservationField('slack'); App.calculateScore()">
+                  <span>Slack - Comunicación interna.</span>
+                </label>
+                <div id="obs-slack" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="generacionReportes" onchange="App.toggleObservationField('generacionReportes'); App.calculateScore()">
+                  <span>Generación de Reportes - Creación de informes.</span>
+                </label>
+                <div id="obs-generacionReportes" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="cargaIncidencias" onchange="App.toggleObservationField('cargaIncidencias'); App.calculateScore()">
+                  <span>Carga de Incidencias - Registro apropiado.</span>
+                </label>
+                <div id="obs-cargaIncidencias" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
           </div>

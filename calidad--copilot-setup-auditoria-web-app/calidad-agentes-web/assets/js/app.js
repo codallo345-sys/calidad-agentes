@@ -1390,6 +1390,26 @@ const App = {
         }
       }
     };
+
+    // Collect observations for unchecked criteria
+    const allCriteria = [
+      'metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia',
+      'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 
+      'tiempoRespuesta', 'tiempoGestion', 'serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia',
+      'honestidadTransparencia', 'rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 
+      'generacionReportes', 'cargaIncidencias'
+    ];
+    
+    const criterionObservations = {};
+    allCriteria.forEach(criterionId => {
+      const checkbox = document.getElementById(criterionId);
+      const obsField = document.querySelector(`#obs-${criterionId} textarea`);
+      
+      // Only save observation if checkbox is unchecked and there's text
+      if (checkbox && !checkbox.checked && obsField && obsField.value.trim()) {
+        criterionObservations[criterionId] = obsField.value.trim();
+      }
+    });
     
     const auditData = {
       agentName: agentData.name,
@@ -1404,6 +1424,7 @@ const App = {
       empatiaScore: parseFloat(document.getElementById('empatiaScore').value) || 0,
       gestionScore: parseFloat(document.getElementById('gestionScore').value) || 0,
       evaluationData: evaluationData,
+      criterionObservations: criterionObservations,
       type: 'Chat', // All audits are chat
       status: 'Completada'
     };
