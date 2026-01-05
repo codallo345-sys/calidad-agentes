@@ -2397,33 +2397,6 @@ const App = {
     // Update subcategory "Marcar" checkboxes
     this.updateSubcategoryCheckboxes();
   },
-    
-    // Total gestión
-    const gestionTotalPercent = gestionTicketScore + conocimientoScore + herramientasScore;
-    const gestionPercent = (gestionTotalPercent / 50) * 100; // % del pilar
-    
-    // Total score
-    const totalScore = Math.round(empatiaTotalPercent + gestionTotalPercent);
-    
-    // Update displays
-    document.getElementById('empatiaPercent').textContent = Math.round(empatiaPercent) + '%';
-    document.getElementById('empatiaTotalPercent').textContent = Math.round(empatiaTotalPercent) + '%';
-    document.getElementById('empatiaFinalPercent').textContent = Math.round(empatiaTotalPercent) + '%';
-    
-    document.getElementById('gestionPercent').textContent = Math.round(gestionPercent) + '%';
-    document.getElementById('gestionTotalPercent').textContent = Math.round(gestionTotalPercent) + '%';
-    document.getElementById('gestionFinalPercent').textContent = Math.round(gestionTotalPercent) + '%';
-    
-    document.getElementById('totalScoreDisplay').textContent = totalScore;
-    document.getElementById('calculatedScore').value = totalScore;
-    
-    // Store individual scores
-    document.getElementById('empatiaScore').value = Math.round(empatiaTotalPercent);
-    document.getElementById('gestionScore').value = Math.round(gestionTotalPercent);
-    
-    // Update subcategory "Marcar" checkboxes
-    this.updateSubcategoryCheckboxes();
-  },
 
   updateSubcategoryCheckboxes() {
     // Update Gestión de ticket checkbox
