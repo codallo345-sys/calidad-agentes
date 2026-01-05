@@ -1139,9 +1139,12 @@ const App = {
           ${team.members.length === 0 ? '<p class="empty">No hay integrantes en este equipo</p>' : ''}
           ${team.members.map(member => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid ${team.color};">
-              <div>
+              <div style="flex: 1;">
                 <div style="font-weight: 600; color: var(--text-primary);">${member.name}</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">${member.email}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                  <i class="fas fa-envelope"></i> ${member.email}
+                  ${member.shift ? `<span style="margin-left: 0.75rem;"><i class="fas fa-clock"></i> ${member.shift}</span>` : ''}
+                </div>
               </div>
               <button class="btn-mini danger" onclick="App.removeMember('${team.id}', '${member.email}')" title="Eliminar">
                 <i class="fas fa-trash"></i>
@@ -1166,14 +1169,24 @@ const App = {
       return;
     }
     
-    const success = DataManager.addTeamMember(teamId, {
+    // Ask for shift
+    const shiftOptions = ['AM', 'PM', 'Weekend'];
+    const shiftMsg = `Seleccione el turno del integrante:\n1. AM (Mañana)\n2. PM (Tarde)\n3. Weekend (Fin de semana)\n\nIngrese el número (1, 2 o 3):`;
+    const shiftChoice = prompt(shiftMsg);
+    
+    let shift = 'AM'; // default
+    if (shiftChoice === '2') shift = 'PM';
+    else if (shiftChoice === '3') shift = 'Weekend';
+    
+    const success = DataManager.addTeamMemberWithShift(teamId, {
       name: name.trim(),
-      email: email.toLowerCase().trim()
+      email: email.toLowerCase().trim(),
+      shift: shift
     });
     
     if (success) {
       this.loadTeamsView();
-      alert('Integrante agregado exitosamente');
+      alert(`Integrante agregado exitosamente al turno ${shift}`);
     } else {
       alert('Error al agregar integrante');
     }
@@ -2537,6 +2550,7 @@ const App = {
     document.getElementById('metricTicketsGood').value = agentData.ticketsGood || 0;
     document.getElementById('metricFirstResponse').value = agentData.firstResponse || 0;
     document.getElementById('metricResolutionTime').value = agentData.resolutionTime || 0;
+    document.getElementById('metricTicketsPerHour').value = agentData.ticketsPerHour || 0;
     
     document.getElementById('manualMetricsModal').classList.remove('hidden');
   },
@@ -2558,7 +2572,8 @@ const App = {
       ticketsBad: parseInt(document.getElementById('metricTicketsBad').value) || 0,
       ticketsGood: parseInt(document.getElementById('metricTicketsGood').value) || 0,
       firstResponse: parseFloat(document.getElementById('metricFirstResponse').value) || 0,
-      resolutionTime: parseFloat(document.getElementById('metricResolutionTime').value) || 0
+      resolutionTime: parseFloat(document.getElementById('metricResolutionTime').value) || 0,
+      ticketsPerHour: parseFloat(document.getElementById('metricTicketsPerHour').value) || 0
     };
     
     // Get current data
