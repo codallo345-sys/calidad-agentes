@@ -24,24 +24,24 @@ const DataManager = {
   // Default agents (2 per team as examples)
   DEFAULT_AGENTS: {
     'soporte-usuarios': [
-      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios' },
-      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios' }
+      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios', shift: 'AM' },
+      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios', shift: 'PM' }
     ],
     'soporte-conductores': [
-      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores' },
-      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores' }
+      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores', shift: 'AM' },
+      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores', shift: 'Weekend' }
     ],
     'soporte-ecr': [
-      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr' },
-      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr' }
+      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr', shift: 'PM' },
+      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr', shift: 'AM' }
     ],
     'soporte-corporativo': [
-      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo' },
-      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo' }
+      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo', shift: 'AM' },
+      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo', shift: 'PM' }
     ],
     'soporte-delivery': [
-      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery' },
-      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery' }
+      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery', shift: 'Weekend' },
+      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery', shift: 'AM' }
     ]
   },
 
@@ -229,6 +229,45 @@ const DataManager = {
     const filtered = audits.filter(audit => audit.id !== id);
     localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify(filtered));
     return true;
+  },
+
+  // Mark audit as viewed by agent
+  markAuditAsViewed(auditId, userEmail) {
+    const audits = this.getAllAudits();
+    const audit = audits.find(a => a.id === auditId);
+    if (audit) {
+      if (!audit.viewedBy) {
+        audit.viewedBy = [];
+      }
+      if (!audit.viewedBy.includes(userEmail)) {
+        audit.viewedBy.push(userEmail);
+        audit.lastViewedAt = new Date().toISOString();
+      }
+      localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify(audits));
+      return true;
+    }
+    return false;
+  },
+
+  // Add comment to audit
+  addAuditComment(auditId, commentText, userEmail, userName) {
+    const audits = this.getAllAudits();
+    const audit = audits.find(a => a.id === auditId);
+    if (audit) {
+      if (!audit.comments) {
+        audit.comments = [];
+      }
+      audit.comments.push({
+        id: this.generateId(),
+        text: commentText,
+        author: userName,
+        authorEmail: userEmail,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify(audits));
+      return true;
+    }
+    return false;
   },
 
   // Get audits by month

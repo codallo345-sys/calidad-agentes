@@ -209,6 +209,8 @@
               </div>
             </div>
           </div>
+
+
         </div>
 
         <!-- Audits View -->
@@ -267,6 +269,7 @@
                     <th>Empatía %</th>
                     <th>Gestión %</th>
                     <th>Total</th>
+                    <th>Estado</th>
                     <th>Resumen</th>
                     <th>Observaciones</th>
                     <th>Acciones</th>
@@ -339,6 +342,9 @@
                     <option value="11">Diciembre</option>
                   </select>
                 </div>
+                <button id="bulkPasteMetricsBtn" class="btn-accent only-editor" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border: none; cursor: pointer; margin-top: 1.3rem;">
+                  <i class="fas fa-file-excel"></i> Pegar desde Excel
+                </button>
                 <button id="configWeeksBtn" class="btn-accent only-editor" style="background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer; margin-top: 1.3rem;">
                   <i class="fas fa-cog"></i> Configurar Semanas
                 </button>
@@ -510,49 +516,75 @@
             </div>
 
           <div style="display: grid; gap: 0.5rem;">
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="metodoRided" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>MÉTODO RIDED</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Bienvenida, Indagación, Solución, Escucha Empática, Despedida.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="metodoRided" onchange="App.toggleObservationField('metodoRided'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>MÉTODO RIDED</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Bienvenida, Indagación, Solución, Escucha Empática, Despedida.</div>
+                </div>
+              </label>
+              <div id="obs-metodoRided" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="lenguajePositivo" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>LENGUAJE POSITIVO</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Reconocimiento del contexto y estado del cliente. Cortesía.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="lenguajePositivo" onchange="App.toggleObservationField('lenguajePositivo'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>LENGUAJE POSITIVO</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Reconocimiento del contexto y estado del cliente. Cortesía.</div>
+                </div>
+              </label>
+              <div id="obs-lenguajePositivo" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="acompanamiento" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>ACOMPAÑAMIENTO</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">No abandono. Gestión del tiempo de espera.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="acompanamiento" onchange="App.toggleObservationField('acompanamiento'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>ACOMPAÑAMIENTO</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">No abandono. Gestión del tiempo de espera.</div>
+                </div>
+              </label>
+              <div id="obs-acompanamiento" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="personalizacion" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>PERSONALIZACIÓN</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Adaptación de plantillas. Evitar repetición.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="personalizacion" onchange="App.toggleObservationField('personalizacion'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>PERSONALIZACIÓN</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Adaptación de plantillas. Evitar repetición.</div>
+                </div>
+              </label>
+              <div id="obs-personalizacion" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="estructura" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
-                <strong>ESTRUCTURA</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">Consolidación de mensajes y ritmo de conversación.</div>
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="estructura" onchange="App.toggleObservationField('estructura'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                  <strong>ESTRUCTURA</strong>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">Consolidación de mensajes y ritmo de conversación.</div>
+                </div>
+              </label>
+              <div id="obs-estructura" class="observation-field" style="display: none; margin-top: 0.5rem; margin-left: 2rem;">
+                <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.85rem;"></textarea>
               </div>
-            </label>
+            </div>
             
-            <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
-              <input type="checkbox" name="empatia" id="usoIaOrtografia" onchange="App.calculateScore()" style="margin-top: 0.25rem;">
-              <div style="flex: 1;">
+            <div>
+              <label style="display: flex; align-items: start; gap: 0.5rem; padding: 0.5rem; background: white; border-radius: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="empatia" id="usoIaOrtografia" onchange="App.toggleObservationField('usoIaOrtografia'); App.calculateScore()" style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
                 <strong>USO DE IA, ORTOGRAFÍA Y EMOJIS</strong>
                 <div style="font-size: 0.85rem; color: var(--text-muted);">Aplicación de IA, escritura correcta y comunicación visual adecuada.</div>
               </div>
@@ -602,34 +634,69 @@
               </label>
             </div>
             <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="estadosTicket" onchange="App.calculateScore()">
-                <span>Estados del Ticket - Proceso correcto en Zendesk.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="ausenciaCliente" onchange="App.calculateScore()">
-                <span>Ausencia del Cliente - Manejo apropiado de no respuesta.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="validacionHistorial" onchange="App.calculateScore()">
-                <span>Validación del Historial - Revisión de incidencias previas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tipificacionCriterio" onchange="App.calculateScore()">
-                <span>Tipificación - Clasificación correcta del ticket.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="retencionTickets" onchange="App.calculateScore()">
-                <span>Retención de Tickets - Mantener tickets activos apropiadamente.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoRespuesta" onchange="App.calculateScore()">
-                <span>Tiempo de Respuesta - Cumplimiento de tiempos.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoGestion" onchange="App.calculateScore()">
-                <span>Tiempo de Gestión - Eficiencia en el manejo.</span>
-              </label>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="estadosTicket" onchange="App.toggleObservationField('estadosTicket'); App.calculateScore()">
+                  <span>Estados del Ticket - Proceso correcto en Zendesk.</span>
+                </label>
+                <div id="obs-estadosTicket" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="ausenciaCliente" onchange="App.toggleObservationField('ausenciaCliente'); App.calculateScore()">
+                  <span>Ausencia del Cliente - Manejo apropiado de no respuesta.</span>
+                </label>
+                <div id="obs-ausenciaCliente" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="validacionHistorial" onchange="App.toggleObservationField('validacionHistorial'); App.calculateScore()">
+                  <span>Validación del Historial - Revisión de incidencias previas.</span>
+                </label>
+                <div id="obs-validacionHistorial" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tipificacionCriterio" onchange="App.toggleObservationField('tipificacionCriterio'); App.calculateScore()">
+                  <span>Tipificación - Clasificación correcta del ticket.</span>
+                </label>
+                <div id="obs-tipificacionCriterio" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="retencionTickets" onchange="App.toggleObservationField('retencionTickets'); App.calculateScore()">
+                  <span>Retención de Tickets - Mantener tickets activos apropiadamente.</span>
+                </label>
+                <div id="obs-retencionTickets" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoRespuesta" onchange="App.toggleObservationField('tiempoRespuesta'); App.calculateScore()">
+                  <span>Tiempo de Respuesta - Cumplimiento de tiempos.</span>
+                </label>
+                <div id="obs-tiempoRespuesta" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoGestion" onchange="App.toggleObservationField('tiempoGestion'); App.calculateScore()">
+                  <span>Tiempo de Gestión - Eficiencia en el manejo.</span>
+                </label>
+                <div id="obs-tiempoGestion" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -645,22 +712,42 @@
               </label>
             </div>
             <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="serviciosPromociones" onchange="App.calculateScore()">
-                <span>Servicios y Promociones - Conocimiento completo de ofertas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="informacionVeraz" onchange="App.calculateScore()">
-                <span>Información Veraz - Datos correctos y verificables.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="parlamentosContingencia" onchange="App.calculateScore()">
-                <span>Parlamentos de Contingencia - Guiones para situaciones difíciles.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="honestidadTransparencia" onchange="App.calculateScore()">
-                <span>Honestidad y Transparencia - Comunicación clara y directa.</span>
-              </label>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="serviciosPromociones" onchange="App.toggleObservationField('serviciosPromociones'); App.calculateScore()">
+                  <span>Servicios y Promociones - Conocimiento completo de ofertas.</span>
+                </label>
+                <div id="obs-serviciosPromociones" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="informacionVeraz" onchange="App.toggleObservationField('informacionVeraz'); App.calculateScore()">
+                  <span>Información Veraz - Datos correctos y verificables.</span>
+                </label>
+                <div id="obs-informacionVeraz" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="parlamentosContingencia" onchange="App.toggleObservationField('parlamentosContingencia'); App.calculateScore()">
+                  <span>Parlamentos de Contingencia - Guiones para situaciones difíciles.</span>
+                </label>
+                <div id="obs-parlamentosContingencia" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="honestidadTransparencia" onchange="App.toggleObservationField('honestidadTransparencia'); App.calculateScore()">
+                  <span>Honestidad y Transparencia - Comunicación clara y directa.</span>
+                </label>
+                <div id="obs-honestidadTransparencia" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -676,30 +763,60 @@
               </label>
             </div>
             <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="rideryOffice" onchange="App.calculateScore()">
-                <span>Ridery Office - Dominio de plataforma principal.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="adminZendesk" onchange="App.calculateScore()">
-                <span>Admin y Zendesk - Herramientas administrativas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="driveManuales" onchange="App.calculateScore()">
-                <span>Drive y Manuales - Consulta de documentación.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="slack" onchange="App.calculateScore()">
-                <span>Slack - Comunicación interna.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="generacionReportes" onchange="App.calculateScore()">
-                <span>Generación de Reportes - Creación de informes.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="cargaIncidencias" onchange="App.calculateScore()">
-                <span>Carga de Incidencias - Registro apropiado.</span>
-              </label>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="rideryOffice" onchange="App.toggleObservationField('rideryOffice'); App.calculateScore()">
+                  <span>Ridery Office - Dominio de plataforma principal.</span>
+                </label>
+                <div id="obs-rideryOffice" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="adminZendesk" onchange="App.toggleObservationField('adminZendesk'); App.calculateScore()">
+                  <span>Admin y Zendesk - Herramientas administrativas.</span>
+                </label>
+                <div id="obs-adminZendesk" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="driveManuales" onchange="App.toggleObservationField('driveManuales'); App.calculateScore()">
+                  <span>Drive y Manuales - Consulta de documentación.</span>
+                </label>
+                <div id="obs-driveManuales" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="slack" onchange="App.toggleObservationField('slack'); App.calculateScore()">
+                  <span>Slack - Comunicación interna.</span>
+                </label>
+                <div id="obs-slack" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="generacionReportes" onchange="App.toggleObservationField('generacionReportes'); App.calculateScore()">
+                  <span>Generación de Reportes - Creación de informes.</span>
+                </label>
+                <div id="obs-generacionReportes" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
+              <div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="cargaIncidencias" onchange="App.toggleObservationField('cargaIncidencias'); App.calculateScore()">
+                  <span>Carga de Incidencias - Registro apropiado.</span>
+                </label>
+                <div id="obs-cargaIncidencias" class="observation-field" style="display: none; margin-top: 0.35rem; margin-left: 1.75rem;">
+                  <textarea class="input-dark" rows="2" placeholder="Explique por qué no se cumplió este criterio..." style="font-size: 0.8rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
           </div>
@@ -839,6 +956,12 @@
             <input type="number" id="metricTickets" class="input-dark" min="0" step="1" value="0">
           </div>
           <div>
+            <label class="label-small" for="metricTicketsPerHour">
+              <i class="fas fa-tachometer-alt"></i> Tickets por Hora
+            </label>
+            <input type="number" id="metricTicketsPerHour" class="input-dark" min="0" step="0.01" value="0">
+          </div>
+          <div>
             <label class="label-small" for="metricTicketsBad">
               <i class="fas fa-frown"></i> Tickets con Satisfacción Mala
             </label>
@@ -873,6 +996,10 @@
             <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
             <strong>% Calidad</strong> se calcula automáticamente desde las auditorías registradas.
           </p>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+            <i class="fas fa-info-circle" style="color: #06b6d4;"></i>
+            <strong>Tickets por Hora</strong> indica la eficiencia del agente según su turno.
+          </p>
         </div>
 
         <div style="display: flex; gap: 0.75rem;">
@@ -880,6 +1007,125 @@
             <i class="fas fa-save"></i> Guardar Métricas
           </button>
           <button type="button" id="cancelManualMetricsBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bulk Paste Metrics Modal -->
+  <div id="bulkPasteModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-file-excel"></i> Pegar Métricas desde Excel
+        </h2>
+        <button id="closeBulkPasteBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+        <p style="margin: 0; font-size: 0.9rem; color: var(--text-primary); line-height: 1.6;">
+          <i class="fas fa-info-circle" style="color: #38CEA6;"></i>
+          <strong>Instrucciones:</strong><br>
+          1. Copie los datos directamente desde Excel/Zendesk (incluyendo o sin encabezados)<br>
+          2. Formato esperado por columna:<br>
+          <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; margin: 0.5rem 0; font-size: 0.85rem;">
+            Nombre | Tickets | Satisfacción Mala | Satisfacción Buena | Tiempo 1a Resp(s) | Tiempo Resol(min)
+          </code><br>
+          3. El sistema calculará automáticamente "Tickets por Hora" y "% Calificación"<br>
+          4. Pegue los datos en el cuadro de abajo y seleccione la semana
+        </p>
+      </div>
+
+      <form id="bulkPasteForm">
+        <div style="margin-bottom: 1.5rem;">
+          <label class="label-small" for="bulkPasteData">
+            <i class="fas fa-table"></i> Datos de Excel (un agente por línea, puede incluir encabezados)
+          </label>
+          <textarea id="bulkPasteData" class="input-dark" rows="12" placeholder="Pegue aquí los datos copiados desde Excel...&#10;Ejemplo (puede copiar con o sin encabezados):&#10;Adriana Rojas	11	1	3	114	26&#10;Nicole Serrano	15	0	4	2740	180&#10;Maryolis Castillo	22	1	3	48	119" style="font-family: 'Courier New', monospace;"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <label class="label-small" for="bulkPasteWeek">
+              <i class="fas fa-calendar-week"></i> Semana
+            </label>
+            <select id="bulkPasteWeek" class="input-dark">
+              <option value="">Seleccionar semana...</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-small">
+              <i class="fas fa-info"></i> Mes/Año
+            </label>
+            <input type="text" id="bulkPasteMonthYear" class="input-dark" readonly>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn-accent" style="flex: 1; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer;">
+            <i class="fas fa-upload"></i> Cargar Métricas
+          </button>
+          <button type="button" id="cancelBulkPasteBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Team Member Modal -->
+  <div id="addMemberModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 500px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-user-plus"></i> Agregar Integrante
+        </h2>
+        <button id="closeAddMemberBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="addMemberForm">
+        <input type="hidden" id="addMemberTeamId">
+        <div style="margin-bottom: 1rem; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem; border-left: 3px solid #38CEA6;">
+          <div style="font-weight: 600; color: var(--text-primary);" id="addMemberTeamName"></div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="label-small" for="memberName">
+            <i class="fas fa-user"></i> Nombre Completo
+          </label>
+          <input type="text" id="memberName" class="input-dark" required placeholder="Ej: María González">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="label-small" for="memberEmail">
+            <i class="fas fa-envelope"></i> Correo Electrónico
+          </label>
+          <input type="email" id="memberEmail" class="input-dark" required placeholder="Ej: maria.gonzalez@ridery.com">
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label class="label-small" for="memberShift">
+            <i class="fas fa-clock"></i> Turno del Integrante
+          </label>
+          <select id="memberShift" class="input-dark" required>
+            <option value="">Seleccionar turno...</option>
+            <option value="AM">Turno Matutino (AM)</option>
+            <option value="PM">Turno Vespertino (PM)</option>
+            <option value="Weekend">Fin de Semana</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn-accent" style="flex: 1; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer;">
+            <i class="fas fa-check"></i> Agregar Integrante
+          </button>
+          <button type="button" id="cancelAddMemberBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
             <i class="fas fa-times"></i> Cancelar
           </button>
         </div>

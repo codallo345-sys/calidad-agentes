@@ -167,6 +167,27 @@ const App = {
       manualMetricsForm.addEventListener('submit', (e) => this.handleManualMetricsSubmit(e));
     }
     
+    // Bulk paste metrics
+    const bulkPasteMetricsBtn = document.getElementById('bulkPasteMetricsBtn');
+    if (bulkPasteMetricsBtn) {
+      bulkPasteMetricsBtn.addEventListener('click', () => this.openBulkPasteModal());
+    }
+    
+    const closeBulkPasteBtn = document.getElementById('closeBulkPasteBtn');
+    if (closeBulkPasteBtn) {
+      closeBulkPasteBtn.addEventListener('click', () => this.closeBulkPasteModal());
+    }
+    
+    const cancelBulkPasteBtn = document.getElementById('cancelBulkPasteBtn');
+    if (cancelBulkPasteBtn) {
+      cancelBulkPasteBtn.addEventListener('click', () => this.closeBulkPasteModal());
+    }
+    
+    const bulkPasteForm = document.getElementById('bulkPasteForm');
+    if (bulkPasteForm) {
+      bulkPasteForm.addEventListener('submit', (e) => this.handleBulkPasteSubmit(e));
+    }
+    
     // Keyboard navigation for table scrolling
     this.setupTableKeyboardNavigation();
 
@@ -185,6 +206,40 @@ const App = {
       manualMetricsModal.addEventListener('click', (e) => {
         if (e.target === manualMetricsModal) {
           this.closeManualMetricsModal();
+        }
+      });
+    }
+    
+    const bulkPasteModal = document.getElementById('bulkPasteModal');
+    if (bulkPasteModal) {
+      bulkPasteModal.addEventListener('click', (e) => {
+        if (e.target === bulkPasteModal) {
+          this.closeBulkPasteModal();
+        }
+      });
+    }
+
+    // Add Member Modal
+    const addMemberForm = document.getElementById('addMemberForm');
+    if (addMemberForm) {
+      addMemberForm.addEventListener('submit', (e) => this.handleAddMemberSubmit(e));
+    }
+
+    const closeAddMemberBtn = document.getElementById('closeAddMemberBtn');
+    if (closeAddMemberBtn) {
+      closeAddMemberBtn.addEventListener('click', () => this.closeAddMemberModal());
+    }
+
+    const cancelAddMemberBtn = document.getElementById('cancelAddMemberBtn');
+    if (cancelAddMemberBtn) {
+      cancelAddMemberBtn.addEventListener('click', () => this.closeAddMemberModal());
+    }
+
+    const addMemberModal = document.getElementById('addMemberModal');
+    if (addMemberModal) {
+      addMemberModal.addEventListener('click', (e) => {
+        if (e.target === addMemberModal) {
+          this.closeAddMemberModal();
         }
       });
     }
@@ -572,13 +627,13 @@ const App = {
     const headingElement = container.parentElement.querySelector('h3');
     if (headingElement) {
       const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-      headingElement.innerHTML = `<i class="fas fa-trophy"></i> Agentes con Mejor Calidad en Gestión - ${monthNames[currentMonth]} ${currentYear}`;
+      headingElement.innerHTML = `<i class="fas fa-star"></i> Mejores y Con Oportunidad de Mejora - ${monthNames[currentMonth]} ${currentYear}`;
     }
     
-    // For editors: show top 3 from each team
-    // For team users: show top 3 from their team only
+    // For editors: show top 2 best + 3 lowest from each team
+    // For team users: show top 2 best + 3 lowest from their team only
     if (isEditor) {
-      // Show top 3 from each team
+      // Show top 2 best + 3 lowest from each team
       const teamRankings = {};
       
       Object.entries(teams).forEach(([teamId, team]) => {
@@ -595,47 +650,74 @@ const App = {
           agentScores[audit.agentName].count++;
         });
         
-        // Get top 3
-        const top3 = Object.entries(agentScores)
+        // Sort all agents by score
+        const sortedAgents = Object.entries(agentScores)
           .map(([name, data]) => ({
             name,
             avgScore: Math.round(data.total / data.count),
             count: data.count
           }))
-          .sort((a, b) => b.avgScore - a.avgScore)
-          .slice(0, 3);
+          .sort((a, b) => b.avgScore - a.avgScore);
         
-        teamRankings[teamId] = { team, top3 };
+        // Get top 2 best (>= 81%) and agents below 81% that need improvement
+        const top2 = sortedAgents.filter(a => a.avgScore >= 81).slice(0, 2);
+        const needsImprovement = sortedAgents.filter(a => a.avgScore < 81);
+        
+        teamRankings[teamId] = { team, top2, needsImprovement };
       });
       
       container.innerHTML = Object.entries(teamRankings).map(([teamId, data]) => {
-        if (!data.top3.length) return '';
-        
-        const medals = ['🥇', '🥈', '🥉'];
+        if (!data.top2.length && !data.needsImprovement.length) return '';
         
         return `
-          <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid ${data.team.color};">
-            <div style="font-weight: 700; color: ${data.team.color}; margin-bottom: 0.5rem;">
+          <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid ${data.team.color};">
+            <div style="font-weight: 700; color: ${data.team.color}; margin-bottom: 0.75rem; font-size: 1rem;">
               ${data.team.name}
             </div>
-            ${data.top3.map((agent, index) => `
-              <div style="padding: 0.4rem 0; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <span style="font-size: 1.2rem; margin-right: 0.5rem;">${medals[index]}</span>
-                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
-                  <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
+            ${data.top2.length > 0 ? `
+              <div style="margin-bottom: 0.75rem;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i class="fas fa-trophy"></i> Mejores Agentes (≥81%)
                 </div>
-                <div style="font-weight: 700; color: #38CEA6; font-size: 1rem;">
-                  ${agent.avgScore}%
-                </div>
+                ${data.top2.map((agent, index) => `
+                  <div style="padding: 0.4rem 0.5rem; display: flex; justify-content: space-between; align-items: center; background: ${index === 0 ? '#f0fdf4' : '#f0f9ff'}; border-radius: 0.375rem; margin-bottom: 0.25rem;">
+                    <div>
+                      <span style="font-size: 1.2rem; margin-right: 0.5rem;">${index === 0 ? '🥇' : '🥈'}</span>
+                      <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                      <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
+                    </div>
+                    <div style="font-weight: 700; color: #10b981; font-size: 1rem;">
+                      ${agent.avgScore}%
+                    </div>
+                  </div>
+                `).join('')}
               </div>
-            `).join('')}
+            ` : ''}
+            ${data.needsImprovement.length > 0 ? `
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i class="fas fa-exclamation-triangle"></i> Se Puede Mejorar (&lt;81%)
+                </div>
+                ${data.needsImprovement.map((agent) => `
+                  <div style="padding: 0.4rem 0.5rem; display: flex; justify-content: space-between; align-items: center; background: #fef3f2; border-radius: 0.375rem; margin-bottom: 0.25rem;">
+                    <div>
+                      <span style="font-size: 1rem; margin-right: 0.5rem;">📊</span>
+                      <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                      <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
+                    </div>
+                    <div style="font-weight: 700; color: #f59e0b; font-size: 1rem;">
+                      ${agent.avgScore}%
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
           </div>
         `;
       }).join('');
       
     } else if (userTeam) {
-      // Show top 3 from user's team only
+      // Show top 2 best + 3 lowest from user's team only
       const team = teams[userTeam];
       const teamMemberNames = team && team.members ? team.members.map(m => m.name) : [];
       const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
@@ -650,42 +732,74 @@ const App = {
         agentScores[audit.agentName].count++;
       });
       
-      // Get top 3
-      const top3 = Object.entries(agentScores)
+      // Sort all agents by score
+      const sortedAgents = Object.entries(agentScores)
         .map(([name, data]) => ({
           name,
           avgScore: Math.round(data.total / data.count),
           count: data.count
         }))
-        .sort((a, b) => b.avgScore - a.avgScore)
-        .slice(0, 3);
+        .sort((a, b) => b.avgScore - a.avgScore);
       
-      if (top3.length === 0) {
+      // Get top 2 best (>= 81%) and agents below 81% that need improvement
+      const top2 = sortedAgents.filter(a => a.avgScore >= 81).slice(0, 2);
+      const needsImprovement = sortedAgents.filter(a => a.avgScore < 81);
+      
+      if (top2.length === 0 && needsImprovement.length === 0) {
         container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
         return;
       }
       
-      const medals = ['🥇', '🥈', '🥉'];
-      
-      container.innerHTML = top3.map((agent, index) => `
-        <div style="padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <span style="font-size: 1.3rem; margin-right: 0.5rem;">${medals[index]}</span>
-            <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
-            <div style="font-size: 0.85rem; color: ${team.color};">
-              ${team.name} • ${agent.count} auditorías
+      container.innerHTML = `
+        ${top2.length > 0 ? `
+          <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <i class="fas fa-trophy"></i> Mejores Agentes (≥81%)
             </div>
+            ${top2.map((agent, index) => `
+              <div style="padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; background: ${index === 0 ? '#f0fdf4' : '#f0f9ff'}; border-radius: 0.375rem; margin-bottom: 0.5rem;">
+                <div>
+                  <span style="font-size: 1.3rem; margin-right: 0.5rem;">${index === 0 ? '🥇' : '🥈'}</span>
+                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                  <div style="font-size: 0.85rem; color: ${team.color};">
+                    ${team.name} • ${agent.count} auditorías
+                  </div>
+                </div>
+                <div style="font-weight: 700; color: #10b981; font-size: 1.1rem;">
+                  ${agent.avgScore}%
+                </div>
+              </div>
+            `).join('')}
           </div>
-          <div style="font-weight: 700; color: #38CEA6; font-size: 1.1rem;">
-            ${agent.avgScore}%
+        ` : ''}
+        ${needsImprovement.length > 0 ? `
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <i class="fas fa-exclamation-triangle"></i> Se Puede Mejorar (&lt;81%)
+            </div>
+            ${needsImprovement.map((agent) => `
+              <div style="padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; background: #fef3f2; border-radius: 0.375rem; margin-bottom: 0.5rem;">
+                <div>
+                  <span style="font-size: 1rem; margin-right: 0.5rem;">📊</span>
+                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                  <div style="font-size: 0.85rem; color: ${team.color};">
+                    ${team.name} • ${agent.count} auditorías
+                  </div>
+                </div>
+                <div style="font-weight: 700; color: #f59e0b; font-size: 1.1rem;">
+                  ${agent.avgScore}%
+                </div>
+              </div>
+            `).join('')}
           </div>
-        </div>
-      `).join('');
+        ` : ''}
+      `;
     } else {
       // For viewers without a team, show empty state
       container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
     }
   },
+
   
   loadQualityComparisonChart() {
     const user = DataManager.getCurrentUser();
@@ -844,10 +958,11 @@ const App = {
   renderAuditsTable(audits) {
     const tbody = document.getElementById('auditsTableBody');
     const isEditor = DataManager.isEditor();
+    const currentUser = DataManager.getCurrentUser();
     const teams = DataManager.getAllTeams();
     
     if (audits.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="12" class="empty">No se encontraron auditorías</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="13" class="empty">No se encontraron auditorías</td></tr>`;
       return;
     }
 
@@ -862,6 +977,10 @@ const App = {
       const gestionScore = audit.gestionScore || 0;
       const totalScore = audit.score || 0;
       const tipificacion = audit.tipificacion || '-';
+      
+      // Check if current user has viewed this audit
+      const hasViewed = audit.viewedBy && audit.viewedBy.includes(currentUser.email);
+      const commentCount = audit.comments ? audit.comments.length : 0;
       
       // Truncate long text for display but keep full text in title
       const truncate = (text, maxLen) => {
@@ -880,6 +999,10 @@ const App = {
           <td style="text-align: center; min-width: 70px;"><strong style="color: #38CEA6; font-size: 0.95rem;">${empatiaScore}%</strong></td>
           <td style="text-align: center; min-width: 70px;"><strong style="color: #f59e0b; font-size: 0.95rem;">${gestionScore}%</strong></td>
           <td style="text-align: center; min-width: 60px;"><strong style="color: #10b981; font-size: 1rem;">${totalScore}</strong></td>
+          <td style="text-align: center; min-width: 80px;">
+            <i class="fas fa-eye" style="font-size: 1.2rem; color: ${hasViewed ? '#10b981' : '#d1d5db'};" title="${hasViewed ? 'Visto por el agente' : 'No visto'}"></i>
+            ${commentCount > 0 ? `<span style="margin-left: 0.5rem; background: #38CEA6; color: white; border-radius: 50%; padding: 0.15rem 0.4rem; font-size: 0.7rem; font-weight: 700;">${commentCount}</span>` : ''}
+          </td>
           <td style="min-width: 250px; max-width: 350px; white-space: normal; font-size: 0.85rem; line-height: 1.4;" title="${audit.ticketSummary || ''}">
             ${truncate(audit.ticketSummary, 100) || '-'}
           </td>
@@ -931,9 +1054,12 @@ const App = {
           ${team.members.length === 0 ? '<p class="empty">No hay integrantes en este equipo</p>' : ''}
           ${team.members.map(member => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid ${team.color};">
-              <div>
+              <div style="flex: 1;">
                 <div style="font-weight: 600; color: var(--text-primary);">${member.name}</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">${member.email}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                  <i class="fas fa-envelope"></i> ${member.email}
+                  ${member.shift ? ` • <i class="fas fa-clock"></i> Turno: <span style="font-weight: 600; color: ${team.color};">${member.shift}</span>` : ''}
+                </div>
               </div>
               <button class="btn-mini danger" onclick="App.removeMember('${team.id}', '${member.email}')" title="Eliminar">
                 <i class="fas fa-trash"></i>
@@ -949,21 +1075,45 @@ const App = {
     const team = DataManager.getTeamById(teamId);
     if (!team) return;
     
-    const name = prompt(`Agregar integrante a ${team.name}\n\nNombre completo:`);
-    if (!name || !name.trim()) return;
+    document.getElementById('addMemberTeamId').value = teamId;
+    document.getElementById('addMemberTeamName').textContent = team.name;
+    document.getElementById('memberName').value = '';
+    document.getElementById('memberEmail').value = '';
+    document.getElementById('memberShift').value = '';
     
-    const email = prompt(`Email del integrante:`);
-    if (!email || !email.trim() || !email.includes('@')) {
+    document.getElementById('addMemberModal').classList.remove('hidden');
+  },
+
+  closeAddMemberModal() {
+    document.getElementById('addMemberModal').classList.add('hidden');
+  },
+
+  handleAddMemberSubmit(e) {
+    e.preventDefault();
+    
+    const teamId = document.getElementById('addMemberTeamId').value;
+    const name = document.getElementById('memberName').value.trim();
+    const email = document.getElementById('memberEmail').value.toLowerCase().trim();
+    const shift = document.getElementById('memberShift').value;
+    
+    if (!name || !email || !shift) {
+      alert('Por favor complete todos los campos');
+      return;
+    }
+    
+    if (!email.includes('@')) {
       alert('Por favor ingrese un email válido');
       return;
     }
     
     const success = DataManager.addTeamMember(teamId, {
-      name: name.trim(),
-      email: email.toLowerCase().trim()
+      name,
+      email,
+      shift
     });
     
     if (success) {
+      this.closeAddMemberModal();
       this.loadTeamsView();
       alert('Integrante agregado exitosamente');
     } else {
@@ -1129,6 +1279,26 @@ const App = {
         }
       }
     };
+
+    // Collect observations for unchecked criteria
+    const allCriteria = [
+      'metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia',
+      'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 
+      'tiempoRespuesta', 'tiempoGestion', 'serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia',
+      'honestidadTransparencia', 'rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 
+      'generacionReportes', 'cargaIncidencias'
+    ];
+    
+    const criterionObservations = {};
+    allCriteria.forEach(criterionId => {
+      const checkbox = document.getElementById(criterionId);
+      const obsField = document.querySelector(`#obs-${criterionId} textarea`);
+      
+      // Only save observation if checkbox is unchecked and there's text
+      if (checkbox && !checkbox.checked && obsField && obsField.value.trim()) {
+        criterionObservations[criterionId] = obsField.value.trim();
+      }
+    });
     
     const auditData = {
       agentName: agentData.name,
@@ -1143,6 +1313,7 @@ const App = {
       empatiaScore: parseFloat(document.getElementById('empatiaScore').value) || 0,
       gestionScore: parseFloat(document.getElementById('gestionScore').value) || 0,
       evaluationData: evaluationData,
+      criterionObservations: criterionObservations,
       type: 'Chat', // All audits are chat
       status: 'Completada'
     };
@@ -1184,6 +1355,12 @@ const App = {
     const audit = DataManager.getAuditById(auditId);
     if (!audit) return;
 
+    const currentUser = DataManager.getCurrentUser();
+    const isEditor = DataManager.isEditor();
+    
+    // Mark as viewed by current user
+    DataManager.markAuditAsViewed(auditId, currentUser.email);
+    
     const teams = DataManager.getAllTeams();
     const team = teams[audit.teamId];
     const teamName = team ? team.name : 'N/A';
@@ -1270,6 +1447,22 @@ const App = {
       });
       gestionHTML += '</div></div>';
     });
+
+    // Build comments section
+    let commentsHTML = '';
+    if (audit.comments && audit.comments.length > 0) {
+      commentsHTML = audit.comments.map(comment => `
+        <div style="background: white; padding: 1rem; border-radius: 0.5rem; border-left: 3px solid #38CEA6; margin-bottom: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+            <div style="font-weight: 600; color: var(--text-primary);">${comment.author}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">${DataManager.formatDate(comment.createdAt)}</div>
+          </div>
+          <div style="color: var(--text-primary); line-height: 1.6; white-space: pre-wrap;">${comment.text}</div>
+        </div>
+      `).join('');
+    } else {
+      commentsHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">No hay comentarios aún</p>';
+    }
 
     const content = `
       <div style="display: grid; gap: 1.5rem;">
@@ -1362,15 +1555,59 @@ const App = {
             </div>
           </div>
         </div>
+
+        <!-- Comments Section -->
+        <div style="background: #f9fafb; padding: 1.5rem; border-radius: 0.75rem;">
+          <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--text-primary);">
+            <i class="fas fa-comments"></i> Comentarios del Agente
+          </h3>
+          ${commentsHTML}
+          ${!isEditor ? `
+            <div style="margin-top: 1rem;">
+              <textarea id="newCommentText" class="input-dark" rows="3" placeholder="Escribe tu comentario aquí..."></textarea>
+              <button onclick="App.addComment('${auditId}')" class="btn-accent" style="margin-top: 0.5rem; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer; width: 100%;">
+                <i class="fas fa-paper-plane"></i> Enviar Comentario
+              </button>
+            </div>
+          ` : ''}
+        </div>
       </div>
     `;
 
     document.getElementById('auditViewContent').innerHTML = content;
     document.getElementById('auditViewModal').classList.remove('hidden');
+    
+    // Refresh the audits table to update viewed status
+    this.loadAuditsView();
   },
 
   closeViewModal() {
     document.getElementById('auditViewModal').classList.add('hidden');
+  },
+
+  addComment(auditId) {
+    const commentText = document.getElementById('newCommentText').value.trim();
+    if (!commentText) {
+      alert('Por favor escriba un comentario');
+      return;
+    }
+
+    const currentUser = DataManager.getCurrentUser();
+    const audit = DataManager.getAuditById(auditId);
+    
+    // Add comment to audit
+    const success = DataManager.addAuditComment(auditId, commentText, currentUser.email, audit.agentName);
+    
+    if (success) {
+      // Simulate email notification to editor (in real app, this would be a backend call)
+      console.log(`📧 Email notification sent to editor: New comment from ${audit.agentName} on audit ${auditId}`);
+      
+      // Refresh the view
+      this.viewAudit(auditId);
+      alert('Comentario agregado exitosamente. Se ha notificado al editor.');
+    } else {
+      alert('Error al agregar el comentario');
+    }
   },
 
   // Weekly Metrics
@@ -2052,28 +2289,65 @@ const App = {
     return checked;
   },
 
+  toggleObservationField(criterionId) {
+    const checkbox = document.getElementById(criterionId);
+    const obsField = document.getElementById(`obs-${criterionId}`);
+    
+    if (checkbox && obsField) {
+      // Show observation field if checkbox is NOT checked
+      if (checkbox.checked) {
+        obsField.style.display = 'none';
+      } else {
+        obsField.style.display = 'block';
+      }
+    }
+  },
+
   calculateScore() {
     // Calculate Empatía (50% total)
     const empatiaCriteria = ['metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia'];
     const empatiaChecked = this.countCheckedCriteria(empatiaCriteria);
-    const empatiaPercent = (empatiaChecked / empatiaCriteria.length) * 100; // % del pilar
-    const empatiaTotalPercent = (empatiaChecked / empatiaCriteria.length) * 50; // % del total
+    const empatiaErrors = empatiaCriteria.length - empatiaChecked;
     
     // Calculate Gestión (50% total) - 3 subcategories of 33.33% each
     // Gestión de ticket (33.33% of 50% = 16.67% of total)
     const gestionTicketCriteria = ['estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion'];
     const gestionTicketChecked = this.countCheckedCriteria(gestionTicketCriteria);
-    const gestionTicketScore = (gestionTicketChecked / gestionTicketCriteria.length) * 16.67;
+    const gestionTicketErrors = gestionTicketCriteria.length - gestionTicketChecked;
     
     // Conocimiento Integral (33.33% of 50% = 16.67% of total)
     const conocimientoCriteria = ['serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia'];
     const conocimientoChecked = this.countCheckedCriteria(conocimientoCriteria);
-    const conocimientoScore = (conocimientoChecked / conocimientoCriteria.length) * 16.67;
+    const conocimientoErrors = conocimientoCriteria.length - conocimientoChecked;
     
     // Uso estratégico de herramientas (33.33% of 50% = 16.67% of total)
     const herramientasCriteria = ['rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'];
     const herramientasChecked = this.countCheckedCriteria(herramientasCriteria);
-    const herramientasScore = (herramientasChecked / herramientasCriteria.length) * 16.67;
+    const herramientasErrors = herramientasCriteria.length - herramientasChecked;
+    
+    // STRICT RULE: 2 or more errors in any section = 0 points for that section
+    // Justification: bajo estándares de calidad, o la gestión está bien o está mal (margen de error humano de 2)
+    let empatiaTotalPercent = 0;
+    let empatiaPercent = 0;
+    if (empatiaErrors < 2) {
+      empatiaPercent = (empatiaChecked / empatiaCriteria.length) * 100; // % del pilar
+      empatiaTotalPercent = (empatiaChecked / empatiaCriteria.length) * 50; // % del total
+    }
+    
+    let gestionTicketScore = 0;
+    if (gestionTicketErrors < 2) {
+      gestionTicketScore = (gestionTicketChecked / gestionTicketCriteria.length) * 16.67;
+    }
+    
+    let conocimientoScore = 0;
+    if (conocimientoErrors < 2) {
+      conocimientoScore = (conocimientoChecked / conocimientoCriteria.length) * 16.67;
+    }
+    
+    let herramientasScore = 0;
+    if (herramientasErrors < 2) {
+      herramientasScore = (herramientasChecked / herramientasCriteria.length) * 16.67;
+    }
     
     // Total gestión
     const gestionTotalPercent = gestionTicketScore + conocimientoScore + herramientasScore;
@@ -2288,6 +2562,7 @@ const App = {
     const agentData = manualData[agentName] && manualData[agentName][weekIndex] ? manualData[agentName][weekIndex] : {};
     
     document.getElementById('metricTickets').value = agentData.tickets || 0;
+    document.getElementById('metricTicketsPerHour').value = agentData.ticketsPerHour || 0;
     document.getElementById('metricTicketsBad').value = agentData.ticketsBad || 0;
     document.getElementById('metricTicketsGood').value = agentData.ticketsGood || 0;
     document.getElementById('metricFirstResponse').value = agentData.firstResponse || 0;
@@ -2310,6 +2585,7 @@ const App = {
     
     const metricsData = {
       tickets: parseInt(document.getElementById('metricTickets').value) || 0,
+      ticketsPerHour: parseFloat(document.getElementById('metricTicketsPerHour').value) || 0,
       ticketsBad: parseInt(document.getElementById('metricTicketsBad').value) || 0,
       ticketsGood: parseInt(document.getElementById('metricTicketsGood').value) || 0,
       firstResponse: parseFloat(document.getElementById('metricFirstResponse').value) || 0,
@@ -2364,6 +2640,148 @@ const App = {
     
     // Optionally reload to show changes (but not necessary as the input already shows the new value)
     // this.loadMonthlyMetrics();
+  },
+
+  // Bulk Paste Modal
+  openBulkPasteModal() {
+    const filterMonthMetrics = document.getElementById('filterMonthMetrics');
+    const selectedMonth = filterMonthMetrics ? filterMonthMetrics.value : '';
+    
+    if (!selectedMonth) {
+      alert('Por favor seleccione un mes primero');
+      return;
+    }
+    
+    const year = new Date().getFullYear();
+    const month = parseInt(selectedMonth);
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    
+    const weeks = DataManager.getWeekConfig(year, month);
+    const weekSelect = document.getElementById('bulkPasteWeek');
+    weekSelect.innerHTML = weeks.map((week, index) => 
+      `<option value="${index}">Semana ${index + 1}: ${week.startDate} al ${week.endDate}</option>`
+    ).join('');
+    
+    document.getElementById('bulkPasteMonthYear').value = `${monthNames[month]} ${year}`;
+    document.getElementById('bulkPasteData').value = '';
+    
+    document.getElementById('bulkPasteModal').classList.remove('hidden');
+  },
+
+  closeBulkPasteModal() {
+    document.getElementById('bulkPasteModal').classList.add('hidden');
+  },
+
+  handleBulkPasteSubmit(e) {
+    e.preventDefault();
+    
+    const filterMonthMetrics = document.getElementById('filterMonthMetrics');
+    const selectedMonth = filterMonthMetrics ? filterMonthMetrics.value : '';
+    const year = new Date().getFullYear();
+    const month = parseInt(selectedMonth);
+    const weekIndex = parseInt(document.getElementById('bulkPasteWeek').value);
+    const pastedData = document.getElementById('bulkPasteData').value.trim();
+    
+    if (!pastedData) {
+      alert('Por favor pegue los datos de Excel');
+      return;
+    }
+    
+    // Parse the pasted data - expect tab or multiple spaces separated values
+    const lines = pastedData.split('\n').filter(line => line.trim());
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    // Get current data
+    const allData = DataManager.getWeeklyMetricsData(year, month);
+    
+    // Common header patterns to skip
+    const headerPatterns = [
+      /nombre.*agente/i,
+      /tickets.*resueltos/i,
+      /satisfacción/i,
+      /tiempo.*respuesta/i
+    ];
+    
+    lines.forEach((line, lineNum) => {
+      try {
+        // Skip empty lines and header rows
+        if (!line.trim()) return;
+        
+        // Split by tab, comma, or multiple spaces - handle various Excel paste formats
+        const parts = line.split(/\t+/).map(p => p.trim()).filter(p => p && p !== '&nbsp;');
+        
+        // Skip if this looks like a header row
+        if (parts.length > 0 && headerPatterns.some(pattern => pattern.test(parts.join(' ')))) {
+          return;
+        }
+        
+        if (parts.length < 2) {
+          errors.push(`Línea ${lineNum + 1}: Faltan datos (necesita al menos Nombre y Tickets)`);
+          errorCount++;
+          return;
+        }
+        
+        // Parse according to Zendesk export format:
+        // Col 0: Nombre del agente asignado
+        // Col 1: Tickets resueltos
+        // Col 2: Tickets con satisfacción mala
+        // Col 3: Tickets con satisfacción buena
+        // Col 4: Tiempo de primera respuesta (s)
+        // Col 5: Tiempo de resolución completa (min)
+        // Col 6: (optional) Tiempo de primera respuesta (min) - duplicate/alternative
+        
+        const agentName = parts[0];
+        const tickets = parseInt(parts[1]) || 0;
+        const ticketsBad = parseInt(parts[2]) || 0;
+        const ticketsGood = parseInt(parts[3]) || 0;
+        const firstResponseSec = parseFloat(parts[4]) || 0;
+        const resolutionTimeMin = parseFloat(parts[5]) || 0;
+        
+        // Calculate tickets per hour (assuming 8-hour work day)
+        // This is an estimate - can be adjusted based on actual work hours
+        const ticketsPerHour = tickets > 0 ? parseFloat((tickets / 8).toFixed(2)) : 0;
+        
+        // Convert first response from seconds to seconds (already in correct unit)
+        const firstResponse = firstResponseSec;
+        // Resolution time is already in minutes
+        const resolutionTime = resolutionTimeMin;
+        
+        // Initialize agent data if doesn't exist
+        if (!allData[agentName]) {
+          allData[agentName] = {};
+        }
+        
+        // Save metrics for this week
+        allData[agentName][weekIndex] = {
+          tickets,
+          ticketsPerHour,
+          ticketsBad,
+          ticketsGood,
+          firstResponse,
+          resolutionTime
+        };
+        
+        successCount++;
+      } catch (error) {
+        errors.push(`Línea ${lineNum + 1}: ${error.message}`);
+        errorCount++;
+      }
+    });
+    
+    // Save back to storage
+    DataManager.saveWeeklyMetricsData(year, month, allData);
+    
+    this.closeBulkPasteModal();
+    this.loadWeeklyMetrics();
+    
+    let message = `✓ ${successCount} agente(s) cargado(s) exitosamente`;
+    if (errorCount > 0) {
+      message += `\n\n⚠ ${errorCount} error(es):\n${errors.join('\n')}`;
+    }
+    
+    alert(message);
   }
 };
 

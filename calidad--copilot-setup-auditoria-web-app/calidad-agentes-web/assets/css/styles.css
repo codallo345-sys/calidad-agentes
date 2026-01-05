@@ -1,9 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800;900&family=Nunito:wght@400;600;700;800;900&display=swap');
+
 :root {
   --glass-shadow: rgba(0, 0, 0, 0.18);
   --ridery-mint: #38CEA6;
   --ridery-cyan: #06b6d4;
   --ridery-purple: #a855f7;
   --ridery-accent: #0b8f6a;
+  --ridery-navy: #0F111E;
+  --ridery-fuscia: #D71D5C;
+  --ridery-blue: #272883;
   --futuristic-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 25%, #0b8f6a 50%, #06b6d4 100%);
   --surface: #fafbfc;
   --surface-card: #ffffff;
@@ -51,7 +56,7 @@ body {
   background: linear-gradient(135deg, #e8f4f8 0%, #d4edf5 50%, #c5e8f0 100%);
   color: var(--text-primary);
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   margin: 0;
   padding: 0;
   overflow-x: auto;
@@ -472,4 +477,27 @@ body {
 .checkbox-label span {
   flex: 1;
   line-height: 1.4;
+}
+
+/* Notification Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
 }
