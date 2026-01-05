@@ -4,6 +4,7 @@
 const App = {
   currentView: 'dashboard',
   charts: {},
+  listenersInitialized: false,
 
   // Initialize application
   init() {
@@ -16,7 +17,11 @@ const App = {
       this.showAuthScreen();
     }
 
-    this.setupEventListeners();
+    // Only setup event listeners once
+    if (!this.listenersInitialized) {
+      this.setupEventListeners();
+      this.listenersInitialized = true;
+    }
   },
 
   // Setup all event listeners
@@ -37,13 +42,15 @@ const App = {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
-    // Navigation
-    const navBtns = document.querySelectorAll('.nav-btn[data-view]');
-    navBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const view = e.currentTarget.getAttribute('data-view');
+    // Navigation - Use event delegation for better performance
+    document.addEventListener('click', (e) => {
+      const navBtn = e.target.closest('.nav-btn[data-view]');
+      if (navBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const view = navBtn.getAttribute('data-view');
         this.switchView(view);
-      });
+      }
     });
 
     // Audit management
