@@ -673,35 +673,104 @@
                 <span>Marcar</span>
               </label>
             </div>
-            <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="estadosTicket" onchange="App.calculateScore()">
-                <span>Estados del Ticket - Proceso correcto en Zendesk.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="ausenciaCliente" onchange="App.calculateScore()">
-                <span>Ausencia del Cliente - Manejo apropiado de no respuesta.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="validacionHistorial" onchange="App.calculateScore()">
-                <span>Validación del Historial - Revisión de incidencias previas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tipificacionCriterio" onchange="App.calculateScore()">
-                <span>Tipificación - Clasificación correcta del ticket.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="retencionTickets" onchange="App.calculateScore()">
-                <span>Retención de Tickets - Mantener tickets activos apropiadamente.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoRespuesta" onchange="App.calculateScore()">
-                <span>Tiempo de Respuesta - Cumplimiento de tiempos.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoGestion" onchange="App.calculateScore()">
-                <span>Tiempo de Gestión - Eficiencia en el manejo.</span>
-              </label>
+            <div style="display: grid; gap: 0.5rem; font-size: 0.85rem;">
+              <!-- Estados del Ticket -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="estadosTicket" onchange="App.toggleObservationField('estadosTicket'); App.calculateScore()">
+                  <span style="flex: 1;">Estados del Ticket - Proceso correcto en Zendesk.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('estadosTicket')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-estadosTicket" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Ausencia del Cliente -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="ausenciaCliente" onchange="App.toggleObservationField('ausenciaCliente'); App.calculateScore()">
+                  <span style="flex: 1;">Ausencia del Cliente - Manejo apropiado de no respuesta.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('ausenciaCliente')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-ausenciaCliente" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Validación del Historial -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="validacionHistorial" onchange="App.toggleObservationField('validacionHistorial'); App.calculateScore()">
+                  <span style="flex: 1;">Validación del Historial - Revisión de incidencias previas.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('validacionHistorial')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-validacionHistorial" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Tipificación -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tipificacionCriterio" onchange="App.toggleObservationField('tipificacionCriterio'); App.calculateScore()">
+                  <span style="flex: 1;">Tipificación - Clasificación correcta del ticket.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('tipificacionCriterio')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-tipificacionCriterio" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Retención de Tickets -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="retencionTickets" onchange="App.toggleObservationField('retencionTickets'); App.calculateScore()">
+                  <span style="flex: 1;">Retención de Tickets - Mantener tickets activos apropiadamente.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('retencionTickets')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-retencionTickets" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Tiempo de Respuesta -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoRespuesta" onchange="App.toggleObservationField('tiempoRespuesta'); App.calculateScore()">
+                  <span style="flex: 1;">Tiempo de Respuesta - Cumplimiento de tiempos.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('tiempoRespuesta')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-tiempoRespuesta" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Tiempo de Gestión -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="gestionTicket" id="tiempoGestion" onchange="App.toggleObservationField('tiempoGestion'); App.calculateScore()">
+                  <span style="flex: 1;">Tiempo de Gestión - Eficiencia en el manejo.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('tiempoGestion')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-tiempoGestion" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -716,23 +785,62 @@
                 <span>Marcar</span>
               </label>
             </div>
-            <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="serviciosPromociones" onchange="App.calculateScore()">
-                <span>Servicios y Promociones - Conocimiento completo de ofertas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="informacionVeraz" onchange="App.calculateScore()">
-                <span>Información Veraz - Datos correctos y verificables.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="parlamentosContingencia" onchange="App.calculateScore()">
-                <span>Parlamentos de Contingencia - Guiones para situaciones difíciles.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="conocimientoIntegral" id="honestidadTransparencia" onchange="App.calculateScore()">
-                <span>Honestidad y Transparencia - Comunicación clara y directa.</span>
-              </label>
+            <div style="display: grid; gap: 0.5rem; font-size: 0.85rem;">
+              <!-- Servicios y Promociones -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="serviciosPromociones" onchange="App.toggleObservationField('serviciosPromociones'); App.calculateScore()">
+                  <span style="flex: 1;">Servicios y Promociones - Conocimiento completo de ofertas.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('serviciosPromociones')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-serviciosPromociones" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Información Veraz -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="informacionVeraz" onchange="App.toggleObservationField('informacionVeraz'); App.calculateScore()">
+                  <span style="flex: 1;">Información Veraz - Datos correctos y verificables.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('informacionVeraz')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-informacionVeraz" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Parlamentos de Contingencia -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="parlamentosContingencia" onchange="App.toggleObservationField('parlamentosContingencia'); App.calculateScore()">
+                  <span style="flex: 1;">Parlamentos de Contingencia - Guiones para situaciones difíciles.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('parlamentosContingencia')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-parlamentosContingencia" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Honestidad y Transparencia -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="conocimientoIntegral" id="honestidadTransparencia" onchange="App.toggleObservationField('honestidadTransparencia'); App.calculateScore()">
+                  <span style="flex: 1;">Honestidad y Transparencia - Comunicación clara y directa.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('honestidadTransparencia')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-honestidadTransparencia" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -747,31 +855,90 @@
                 <span>Marcar</span>
               </label>
             </div>
-            <div style="display: grid; gap: 0.35rem; font-size: 0.85rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="rideryOffice" onchange="App.calculateScore()">
-                <span>Ridery Office - Dominio de plataforma principal.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="adminZendesk" onchange="App.calculateScore()">
-                <span>Admin y Zendesk - Herramientas administrativas.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="driveManuales" onchange="App.calculateScore()">
-                <span>Drive y Manuales - Consulta de documentación.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="slack" onchange="App.calculateScore()">
-                <span>Slack - Comunicación interna.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="generacionReportes" onchange="App.calculateScore()">
-                <span>Generación de Reportes - Creación de informes.</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" name="gestion" class="herramientas" id="cargaIncidencias" onchange="App.calculateScore()">
-                <span>Carga de Incidencias - Registro apropiado.</span>
-              </label>
+            <div style="display: grid; gap: 0.5rem; font-size: 0.85rem;">
+              <!-- Ridery Office -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="rideryOffice" onchange="App.toggleObservationField('rideryOffice'); App.calculateScore()">
+                  <span style="flex: 1;">Ridery Office - Dominio de plataforma principal.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('rideryOffice')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-rideryOffice" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Admin y Zendesk -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="adminZendesk" onchange="App.toggleObservationField('adminZendesk'); App.calculateScore()">
+                  <span style="flex: 1;">Admin y Zendesk - Herramientas administrativas.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('adminZendesk')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-adminZendesk" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Drive y Manuales -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="driveManuales" onchange="App.toggleObservationField('driveManuales'); App.calculateScore()">
+                  <span style="flex: 1;">Drive y Manuales - Consulta de documentación.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('driveManuales')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-driveManuales" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Slack -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="slack" onchange="App.toggleObservationField('slack'); App.calculateScore()">
+                  <span style="flex: 1;">Slack - Comunicación interna.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('slack')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-slack" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Generación de Reportes -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="generacionReportes" onchange="App.toggleObservationField('generacionReportes'); App.calculateScore()">
+                  <span style="flex: 1;">Generación de Reportes - Creación de informes.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('generacionReportes')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-generacionReportes" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
+
+              <!-- Carga de Incidencias -->
+              <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="gestion" class="herramientas" id="cargaIncidencias" onchange="App.toggleObservationField('cargaIncidencias'); App.calculateScore()">
+                  <span style="flex: 1;">Carga de Incidencias - Registro apropiado.</span>
+                  <button type="button" class="btn-observation" onclick="event.preventDefault(); App.showObservationField('cargaIncidencias')" style="padding: 0.25rem 0.5rem; border: none; background: #e5e7eb; border-radius: 0.25rem; cursor: pointer;">
+                    <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                  </button>
+                </label>
+                <div id="obs-cargaIncidencias" class="observation-field" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                  <textarea class="input-dark" rows="2" placeholder="Observación específica..." style="font-size: 0.85rem;"></textarea>
+                </div>
+              </div>
             </div>
           </div>
           </div>
@@ -782,11 +949,6 @@
           <h3 style="font-size: 1rem; font-weight: 700; margin: 0 0 0.75rem 0; color: var(--text-primary);">
             <i class="fas fa-chart-pie"></i> Resumen de Evaluación
           </h3>
-          
-          <!-- Strict Rule Warning -->
-          <div id="strictRuleWarning" style="display: none; background: #fee2e2; color: #b91c1c; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem; font-weight: 600; text-align: center;">
-            ⚠️ REGLA ESTRICTA: 2 o más errores = 0 puntos
-          </div>
           
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
             <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
@@ -810,13 +972,6 @@
             <i class="fas fa-file-alt"></i> Resumen del Ticket *
           </label>
           <textarea id="ticketSummary" class="input-dark" rows="3" required placeholder="Breve resumen de la interacción y resolución..."></textarea>
-        </div>
-
-        <div style="margin-bottom: 1.5rem;">
-          <label class="label-small" for="observations">
-            <i class="fas fa-comment"></i> Observaciones del Ticket
-          </label>
-          <textarea id="observations" class="input-dark" rows="4" placeholder="Observaciones adicionales, áreas de mejora, comentarios..."></textarea>
         </div>
 
         <!-- Action Buttons -->
@@ -964,6 +1119,87 @@
             <i class="fas fa-save"></i> Guardar Métricas
           </button>
           <button type="button" id="cancelManualMetricsBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Team Member Modal -->
+  <div id="addMemberModal" class="overlay hidden">
+    <div class="overlay-card glass" style="max-width: 500px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">
+          <i class="fas fa-user-plus"></i> Agregar Integrante
+        </h2>
+        <button id="closeAddMemberBtn" class="btn-mini" style="border: none; background: #f3f4f6;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="addMemberForm">
+        <input type="hidden" id="memberTeamId">
+        
+        <div style="margin-bottom: 1rem;">
+          <label class="label-small" for="memberName">
+            <i class="fas fa-user"></i> Nombre Completo *
+          </label>
+          <input type="text" id="memberName" class="input-dark" required placeholder="Ej: Juan Pérez">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="label-small" for="memberEmail">
+            <i class="fas fa-envelope"></i> Email *
+          </label>
+          <input type="email" id="memberEmail" class="input-dark" required placeholder="juan.perez@ridery.com">
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label class="label-small">
+            <i class="fas fa-clock"></i> Turno *
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 0.5rem;">
+            <label class="shift-option">
+              <input type="radio" name="memberShift" value="AM" required>
+              <div class="shift-card">
+                <i class="fas fa-sun"></i>
+                <span>AM - Semana</span>
+                <small>Lunes a Viernes (Mañana)</small>
+              </div>
+            </label>
+            <label class="shift-option">
+              <input type="radio" name="memberShift" value="PM" required>
+              <div class="shift-card">
+                <i class="fas fa-moon"></i>
+                <span>PM - Semana</span>
+                <small>Lunes a Viernes (Tarde)</small>
+              </div>
+            </label>
+            <label class="shift-option">
+              <input type="radio" name="memberShift" value="Semana" required>
+              <div class="shift-card">
+                <i class="fas fa-calendar-week"></i>
+                <span>Semana Completa</span>
+                <small>Lunes a Viernes (Todo el día)</small>
+              </div>
+            </label>
+            <label class="shift-option">
+              <input type="radio" name="memberShift" value="Fin de Semana" required>
+              <div class="shift-card">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Fin de Semana</span>
+                <small>Sábado y Domingo</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn-accent" style="flex: 1; background: linear-gradient(135deg, #38CEA6, #0b8f6a); color: white; border: none; cursor: pointer;">
+            <i class="fas fa-plus"></i> Agregar Integrante
+          </button>
+          <button type="button" id="cancelAddMemberBtn" class="btn-accent" style="background: #e5e7eb; color: var(--text-primary); border: none; cursor: pointer;">
             <i class="fas fa-times"></i> Cancelar
           </button>
         </div>

@@ -473,3 +473,48 @@ body {
   flex: 1;
   line-height: 1.4;
 }
+/* Shift Selection Cards */
+.shift-option {
+  cursor: pointer;
+}
+.shift-option input[type="radio"] {
+  display: none;
+}
+.shift-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: white;
+}
+.shift-card i {
+  font-size: 1.5rem;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.shift-card span {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+.shift-card small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.shift-option input[type="radio"]:checked + .shift-card {
+  border-color: #38CEA6;
+  background: linear-gradient(135deg, rgba(56, 206, 166, 0.1), rgba(11, 143, 106, 0.05));
+}
+.shift-option input[type="radio"]:checked + .shift-card i {
+  color: #38CEA6;
+}
+.shift-option:hover .shift-card {
+  border-color: #38CEA6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 206, 166, 0.2);
+}

@@ -172,6 +172,30 @@ const App = {
     if (manualMetricsForm) {
       manualMetricsForm.addEventListener('submit', (e) => this.handleManualMetricsSubmit(e));
     }
+
+    // Add member modal
+    const closeAddMemberBtn = document.getElementById('closeAddMemberBtn');
+    const cancelAddMemberBtn = document.getElementById('cancelAddMemberBtn');
+    if (closeAddMemberBtn) {
+      closeAddMemberBtn.addEventListener('click', () => this.closeAddMemberModal());
+    }
+    if (cancelAddMemberBtn) {
+      cancelAddMemberBtn.addEventListener('click', () => this.closeAddMemberModal());
+    }
+
+    const addMemberForm = document.getElementById('addMemberForm');
+    if (addMemberForm) {
+      addMemberForm.addEventListener('submit', (e) => this.handleAddMemberSubmit(e));
+    }
+
+    const addMemberModal = document.getElementById('addMemberModal');
+    if (addMemberModal) {
+      addMemberModal.addEventListener('click', (e) => {
+        if (e.target === addMemberModal) {
+          this.closeAddMemberModal();
+        }
+      });
+    }
     
     // Keyboard navigation for table scrolling
     this.setupTableKeyboardNavigation();
@@ -1160,33 +1184,42 @@ const App = {
     const team = DataManager.getTeamById(teamId);
     if (!team) return;
     
-    const name = prompt(`Agregar integrante a ${team.name}\n\nNombre completo:`);
-    if (!name || !name.trim()) return;
+    // Show modal
+    document.getElementById('memberTeamId').value = teamId;
+    document.getElementById('memberName').value = '';
+    document.getElementById('memberEmail').value = '';
     
-    const email = prompt(`Email del integrante:`);
-    if (!email || !email.trim() || !email.includes('@')) {
-      alert('Por favor ingrese un email válido');
+    // Uncheck all radio buttons
+    document.querySelectorAll('input[name="memberShift"]').forEach(radio => radio.checked = false);
+    
+    document.getElementById('addMemberModal').classList.remove('hidden');
+  },
+
+  closeAddMemberModal() {
+    document.getElementById('addMemberModal').classList.add('hidden');
+  },
+
+  handleAddMemberSubmit(e) {
+    e.preventDefault();
+    
+    const teamId = document.getElementById('memberTeamId').value;
+    const name = document.getElementById('memberName').value.trim();
+    const email = document.getElementById('memberEmail').value.toLowerCase().trim();
+    const shift = document.querySelector('input[name="memberShift"]:checked')?.value;
+    
+    if (!shift) {
+      alert('Por favor seleccione un turno');
       return;
     }
     
-    // Ask for shift
-    const shiftOptions = {
-      '1': 'AM',
-      '2': 'PM',
-      '3': 'Weekend'
-    };
-    const shiftMsg = `Seleccione el turno del integrante:\n1. AM (Mañana)\n2. PM (Tarde)\n3. Weekend (Fin de semana)\n\nIngrese el número (1, 2 o 3):`;
-    const shiftChoice = prompt(shiftMsg);
-    
-    const shift = shiftOptions[shiftChoice] || 'AM'; // default to AM if invalid choice
-    
     const success = DataManager.addTeamMemberWithShift(teamId, {
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
+      name: name,
+      email: email,
       shift: shift
     });
     
     if (success) {
+      this.closeAddMemberModal();
       this.loadTeamsView();
       alert(`Integrante agregado exitosamente al turno ${shift}`);
     } else {
@@ -2276,67 +2309,94 @@ const App = {
   },
 
   calculateScore() {
-    // STRICT 2-ERROR RULE: Count total errors (unchecked boxes)
+    // Define criteria for each section
     const empatiaCriteria = ['metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia'];
     const gestionTicketCriteria = ['estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion'];
     const conocimientoCriteria = ['serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia'];
     const herramientasCriteria = ['rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'];
     
-    // Count total errors - optimize by caching DOM queries
-    const allCriteria = [...empatiaCriteria, ...gestionTicketCriteria, ...conocimientoCriteria, ...herramientasCriteria];
-    let totalErrors = 0;
-    for (const criterionId of allCriteria) {
-      const checkbox = document.getElementById(criterionId);
-      if (checkbox && !checkbox.checked) {
-        totalErrors++;
+    // Count errors per section
+    const countErrors = (criteria) => {
+      let errors = 0;
+      for (const criterionId of criteria) {
+        const checkbox = document.getElementById(criterionId);
+        if (checkbox && !checkbox.checked) {
+          errors++;
+        }
       }
-    }
-
-    // Apply strict rule: 2 or more errors = 0 points
-    if (totalErrors >= 2) {
-      // Set all scores to 0
-      document.getElementById('empatiaPercent').textContent = '0%';
-      document.getElementById('empatiaTotalPercent').textContent = '0%';
-      document.getElementById('empatiaFinalPercent').textContent = '0%';
-      document.getElementById('gestionPercent').textContent = '0%';
-      document.getElementById('gestionTotalPercent').textContent = '0%';
-      document.getElementById('gestionFinalPercent').textContent = '0%';
-      document.getElementById('totalScoreDisplay').textContent = '0';
-      document.getElementById('calculatedScore').value = 0;
-      document.getElementById('empatiaScore').value = 0;
-      document.getElementById('gestionScore').value = 0;
-      
-      // Show warning message
-      const warningDiv = document.getElementById('strictRuleWarning');
-      if (warningDiv) {
-        warningDiv.style.display = 'block';
-        warningDiv.textContent = `⚠️ REGLA ESTRICTA: ${totalErrors} errores detectados = 0 puntos (se requiere máximo 1 error)`;
-      }
-      
-      this.updateSubcategoryCheckboxes();
-      return;
-    }
-
-    // Hide warning if less than 2 errors
-    const warningDiv = document.getElementById('strictRuleWarning');
-    if (warningDiv) {
-      warningDiv.style.display = 'none';
-    }
-
-    // Calculate normal scores (0 or 1 error)
-    const empatiaChecked = this.countCheckedCriteria(empatiaCriteria);
-    const empatiaPercent = (empatiaChecked / empatiaCriteria.length) * 100; // % del pilar
-    const empatiaTotalPercent = (empatiaChecked / empatiaCriteria.length) * 50; // % del total
+      return errors;
+    };
     
-    // Calculate Gestión (50% total) - 3 subcategories of 33.33% each
-    const gestionTicketChecked = this.countCheckedCriteria(gestionTicketCriteria);
-    const gestionTicketScore = (gestionTicketChecked / gestionTicketCriteria.length) * 16.67;
+    const empatiaErrors = countErrors(empatiaCriteria);
+    const gestionTicketErrors = countErrors(gestionTicketCriteria);
+    const conocimientoErrors = countErrors(conocimientoCriteria);
+    const herramientasErrors = countErrors(herramientasCriteria);
+
+    // Calculate Empatía (50% total) - apply 2-error rule
+    let empatiaChecked, empatiaPercent, empatiaTotalPercent;
+    if (empatiaErrors >= 2) {
+      empatiaChecked = 0;
+      empatiaPercent = 0;
+      empatiaTotalPercent = 0;
+    } else {
+      empatiaChecked = this.countCheckedCriteria(empatiaCriteria);
+      empatiaPercent = (empatiaChecked / empatiaCriteria.length) * 100;
+      empatiaTotalPercent = (empatiaChecked / empatiaCriteria.length) * 50;
+    }
     
-    const conocimientoChecked = this.countCheckedCriteria(conocimientoCriteria);
-    const conocimientoScore = (conocimientoChecked / conocimientoCriteria.length) * 16.67;
+    // Calculate Gestión subsections (each 33.33% of 50% = 16.67% of total)
+    let gestionTicketScore, conocimientoScore, herramientasScore;
     
-    const herramientasChecked = this.countCheckedCriteria(herramientasCriteria);
-    const herramientasScore = (herramientasChecked / herramientasCriteria.length) * 16.67;
+    // Gestión de ticket (16.67% of total)
+    if (gestionTicketErrors >= 2) {
+      gestionTicketScore = 0;
+    } else {
+      const gestionTicketChecked = this.countCheckedCriteria(gestionTicketCriteria);
+      gestionTicketScore = (gestionTicketChecked / gestionTicketCriteria.length) * 16.67;
+    }
+    
+    // Conocimiento Integral (16.67% of total)
+    if (conocimientoErrors >= 2) {
+      conocimientoScore = 0;
+    } else {
+      const conocimientoChecked = this.countCheckedCriteria(conocimientoCriteria);
+      conocimientoScore = (conocimientoChecked / conocimientoCriteria.length) * 16.67;
+    }
+    
+    // Herramientas (16.67% of total)
+    if (herramientasErrors >= 2) {
+      herramientasScore = 0;
+    } else {
+      const herramientasChecked = this.countCheckedCriteria(herramientasCriteria);
+      herramientasScore = (herramientasChecked / herramientasCriteria.length) * 16.67;
+    }
+    
+    // Total gestión
+    const gestionTotalPercent = gestionTicketScore + conocimientoScore + herramientasScore;
+    const gestionPercent = (gestionTotalPercent / 50) * 100;
+    
+    // Total score
+    const totalScore = Math.round(empatiaTotalPercent + gestionTotalPercent);
+    
+    // Update displays
+    document.getElementById('empatiaPercent').textContent = Math.round(empatiaPercent) + '%';
+    document.getElementById('empatiaTotalPercent').textContent = Math.round(empatiaTotalPercent) + '%';
+    document.getElementById('empatiaFinalPercent').textContent = Math.round(empatiaTotalPercent) + '%';
+    
+    document.getElementById('gestionPercent').textContent = Math.round(gestionPercent) + '%';
+    document.getElementById('gestionTotalPercent').textContent = Math.round(gestionTotalPercent) + '%';
+    document.getElementById('gestionFinalPercent').textContent = Math.round(gestionTotalPercent) + '%';
+    
+    document.getElementById('totalScoreDisplay').textContent = totalScore;
+    document.getElementById('calculatedScore').value = totalScore;
+    
+    // Store individual scores
+    document.getElementById('empatiaScore').value = Math.round(empatiaTotalPercent);
+    document.getElementById('gestionScore').value = Math.round(gestionTotalPercent);
+    
+    // Update subcategory "Marcar" checkboxes
+    this.updateSubcategoryCheckboxes();
+  },
     
     // Total gestión
     const gestionTotalPercent = gestionTicketScore + conocimientoScore + herramientasScore;
