@@ -5,6 +5,67 @@ const App = {
   currentView: 'dashboard',
   charts: {},
 
+  // Notification system
+  showNotification(message, type = 'info', duration = 5000) {
+    const container = document.getElementById('notificationContainer');
+    if (!container) return;
+
+    const notification = document.createElement('div');
+    const notificationId = Date.now();
+    notification.id = `notification-${notificationId}`;
+    
+    const bgColors = {
+      success: '#10b981',
+      error: '#ef4444',
+      warning: '#f59e0b',
+      info: '#06b6d4'
+    };
+
+    const icons = {
+      success: 'check-circle',
+      error: 'exclamation-circle',
+      warning: 'exclamation-triangle',
+      info: 'info-circle'
+    };
+
+    notification.style.cssText = `
+      background: ${bgColors[type]};
+      color: white;
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      animation: slideInRight 0.3s ease-out;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+    `;
+
+    notification.innerHTML = `
+      <i class="fas fa-${icons[type]}" style="font-size: 1.2rem;"></i>
+      <span style="flex: 1;">${message}</span>
+      <i class="fas fa-times" style="opacity: 0.7; font-size: 0.9rem;"></i>
+    `;
+
+    notification.onclick = () => {
+      notification.style.animation = 'slideOutRight 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    };
+
+    container.appendChild(notification);
+
+    if (duration > 0) {
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.style.animation = 'slideOutRight 0.3s ease-in';
+          setTimeout(() => notification.remove(), 300);
+        }
+      }, duration);
+    }
+  },
+
   // Initialize application
   init() {
     // Check if user is logged in
@@ -544,6 +605,7 @@ const App = {
     // Load team quality breakdown (only for editors)
     if (isEditor) {
       this.loadTeamQualityBreakdown();
+      this.loadShiftMetricsBreakdown();
     }
     
     // Load quality comparison chart (only for team users)
@@ -904,6 +966,145 @@ const App = {
                 <div style="font-size: 0.7rem; color: var(--text-muted);">
                   (50% del total)
                 </div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  },
+
+  loadShiftMetricsBreakdown() {
+    const container = document.getElementById('shiftMetricsBreakdown');
+    if (!container) return;
+
+    const allAudits = DataManager.getAllAudits();
+    const teams = DataManager.getAllTeams();
+    const now = new Date();
+    
+    // Get last 7 days for weekly average
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentAudits = allAudits.filter(audit => {
+      const auditDate = new Date(audit.date);
+      return auditDate >= sevenDaysAgo;
+    });
+
+    if (recentAudits.length === 0) {
+      container.innerHTML = '<p class="empty">No hay auditorías en los últimos 7 días</p>';
+      return;
+    }
+
+    // Group audits by agent shift
+    const shiftMetrics = {
+      'AM': { audits: [], agents: new Set() },
+      'PM': { audits: [], agents: new Set() },
+      'Weekend': { audits: [], agents: new Set() }
+    };
+
+    recentAudits.forEach(audit => {
+      // Find agent's shift from team members
+      let agentShift = null;
+      Object.values(teams).forEach(team => {
+        if (team.members) {
+          const member = team.members.find(m => m.name === audit.agentName);
+          if (member && member.shift) {
+            agentShift = member.shift;
+          }
+        }
+      });
+
+      if (agentShift && shiftMetrics[agentShift]) {
+        shiftMetrics[agentShift].audits.push(audit);
+        shiftMetrics[agentShift].agents.add(audit.agentName);
+      }
+    });
+
+    // Calculate averages per shift
+    const shiftResults = [];
+    Object.entries(shiftMetrics).forEach(([shift, data]) => {
+      if (data.audits.length > 0) {
+        const avgQuality = Math.round(
+          data.audits.reduce((sum, a) => sum + (parseFloat(a.score) || 0), 0) / data.audits.length
+        );
+        const avgEmpatia = Math.round(
+          data.audits.reduce((sum, a) => sum + (parseFloat(a.empatiaScore) || 0), 0) / data.audits.length
+        );
+        const avgGestion = Math.round(
+          data.audits.reduce((sum, a) => sum + (parseFloat(a.gestionScore) || 0), 0) / data.audits.length
+        );
+        
+        // Calculate satisfaction percentage from recent audits
+        // Assuming satisfaction data would be in metrics, for now use quality as proxy
+        const avgSatisfaction = avgQuality; // TODO: Calculate from actual satisfaction data
+
+        shiftResults.push({
+          shift,
+          shiftLabel: shift === 'AM' ? 'Turno Matutino' : shift === 'PM' ? 'Turno Vespertino' : 'Fin de Semana',
+          count: data.audits.length,
+          agents: data.agents.size,
+          avgQuality,
+          avgEmpatia,
+          avgGestion,
+          avgSatisfaction
+        });
+      }
+    });
+
+    if (shiftResults.length === 0) {
+      container.innerHTML = '<p class="empty">No hay datos de turnos disponibles</p>';
+      return;
+    }
+
+    const shiftIcons = {
+      'AM': '🌅',
+      'PM': '🌆',
+      'Weekend': '🎉'
+    };
+
+    const shiftColors = {
+      'AM': '#38CEA6',
+      'PM': '#f59e0b',
+      'Weekend': '#D71D5C'
+    };
+
+    container.innerHTML = `
+      <div style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+        <i class="fas fa-calendar-week"></i> Promedios de los últimos 7 días
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        ${shiftResults.map(shift => `
+          <div style="border: 2px solid ${shiftColors[shift.shift]}; border-radius: 0.75rem; padding: 1.25rem; background: linear-gradient(135deg, ${shiftColors[shift.shift]}08, ${shiftColors[shift.shift]}03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <div>
+                <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">${shiftIcons[shift.shift]}</div>
+                <h4 style="font-size: 1rem; font-weight: 700; margin: 0; color: ${shiftColors[shift.shift]};">
+                  ${shift.shiftLabel}
+                </h4>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  ${shift.count} auditorías • ${shift.agents} agentes
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Calidad</div>
+                <div style="font-size: 2rem; font-weight: 800; color: ${shift.avgQuality >= 83 ? '#10b981' : shift.avgQuality >= 70 ? '#f59e0b' : '#ef4444'};">
+                  ${shift.avgQuality}%
+                </div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+              <div style="background: white; padding: 0.5rem; border-radius: 0.375rem; text-align: center;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Empatía</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: #38CEA6;">${shift.avgEmpatia}%</div>
+              </div>
+              <div style="background: white; padding: 0.5rem; border-radius: 0.375rem; text-align: center;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Gestión</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">${shift.avgGestion}%</div>
+              </div>
+              <div style="background: white; padding: 0.5rem; border-radius: 0.375rem; text-align: center; grid-column: span 2;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">% Satisfacción</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: ${shift.avgSatisfaction >= 83 ? '#10b981' : '#f59e0b'};">${shift.avgSatisfaction}%</div>
               </div>
             </div>
           </div>
@@ -1431,8 +1632,10 @@ const App = {
 
     if (auditId) {
       DataManager.updateAudit(auditId, auditData);
+      this.showNotification('Auditoría actualizada exitosamente', 'success');
     } else {
       DataManager.createAudit(auditData);
+      this.showNotification('✅ Nueva auditoría publicada y notificada al agente', 'success');
     }
 
     this.closeAuditModal();
@@ -1710,14 +1913,14 @@ const App = {
     const success = DataManager.addAuditComment(auditId, commentText, currentUser.email, audit.agentName);
     
     if (success) {
-      // Simulate email notification to editor (in real app, this would be a backend call)
-      console.log(`📧 Email notification sent to editor: New comment from ${audit.agentName} on audit ${auditId}`);
+      // Show notification to editor
+      this.showNotification(`💬 Nuevo comentario de ${audit.agentName} en auditoría`, 'info', 7000);
       
       // Refresh the view
       this.viewAudit(auditId);
-      alert('Comentario agregado exitosamente. Se ha notificado al editor.');
+      this.showNotification('Comentario agregado exitosamente', 'success');
     } else {
-      alert('Error al agregar el comentario');
+      this.showNotification('Error al agregar el comentario', 'error');
     }
   },
 

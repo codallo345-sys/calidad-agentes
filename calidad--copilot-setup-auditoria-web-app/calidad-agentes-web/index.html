@@ -220,6 +220,17 @@
               <p class="empty">No hay datos disponibles</p>
             </div>
           </div>
+
+          <!-- Shift-Based Metrics -->
+          <div class="glass only-editor" style="padding: 1.5rem; margin-top: 1.5rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--text-primary);">
+              <i class="fas fa-clock" style="color: #38CEA6; margin-right: 0.5rem;"></i>
+              Promedio Semanal por Turno
+            </h3>
+            <div id="shiftMetricsBreakdown">
+              <p class="empty">No hay datos disponibles</p>
+            </div>
+          </div>
         </div>
 
         <!-- Audits View -->
@@ -1141,6 +1152,9 @@
       </form>
     </div>
   </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px;"></div>
 
   <script src="./assets/js/data.js"></script>
   <script src="./assets/js/app.js"></script>
