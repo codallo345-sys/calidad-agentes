@@ -516,6 +516,11 @@ const App = {
     // Load top agents
     this.loadTopAgents();
     
+    // Load team quality breakdown (only for editors)
+    if (isEditor) {
+      this.loadTeamQualityBreakdown();
+    }
+    
     // Load quality comparison chart (only for team users)
     if (userTeam && !isEditor) {
       this.loadQualityComparisonChart();
@@ -773,6 +778,113 @@ const App = {
       // For viewers without a team, show empty state
       container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
     }
+  },
+
+  loadTeamQualityBreakdown() {
+    const container = document.getElementById('teamQualityBreakdown');
+    if (!container) return;
+
+    const allAudits = DataManager.getAllAudits();
+    const teams = DataManager.getAllTeams();
+    
+    // Get current month audits
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const firstDayOfMonth = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    const lastDayString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(lastDayOfMonth.getDate()).padStart(2, '0')}`;
+    
+    const currentMonthAudits = allAudits.filter(audit => {
+      return audit.date >= firstDayOfMonth && audit.date <= lastDayString;
+    });
+
+    if (currentMonthAudits.length === 0) {
+      container.innerHTML = '<p class="empty">No hay auditorías este mes</p>';
+      return;
+    }
+
+    // Calculate quality metrics by team
+    const teamMetrics = {};
+    
+    Object.entries(teams).forEach(([teamId, team]) => {
+      const teamMemberNames = team.members ? team.members.map(m => m.name) : [];
+      const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
+      
+      if (teamAudits.length > 0) {
+        // Calculate average scores
+        const empatiaTotal = teamAudits.reduce((sum, a) => sum + (parseFloat(a.empatiaScore) || 0), 0);
+        const gestionTotal = teamAudits.reduce((sum, a) => sum + (parseFloat(a.gestionScore) || 0), 0);
+        const calidadTotal = teamAudits.reduce((sum, a) => sum + (parseFloat(a.score) || 0), 0);
+        
+        teamMetrics[teamId] = {
+          team,
+          count: teamAudits.length,
+          empatiaAvg: Math.round(empatiaTotal / teamAudits.length),
+          gestionAvg: Math.round(gestionTotal / teamAudits.length),
+          calidadAvg: Math.round(calidadTotal / teamAudits.length)
+        };
+      }
+    });
+
+    if (Object.keys(teamMetrics).length === 0) {
+      container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
+      return;
+    }
+
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+    container.innerHTML = `
+      <div style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+        <i class="fas fa-calendar"></i> Datos acumulados de ${monthNames[currentMonth]} ${currentYear}
+      </div>
+      <div style="display: grid; gap: 1rem;">
+        ${Object.entries(teamMetrics).map(([teamId, metrics]) => `
+          <div style="border: 2px solid ${metrics.team.color}; border-radius: 0.75rem; padding: 1rem; background: linear-gradient(135deg, ${metrics.team.color}08, ${metrics.team.color}03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <div>
+                <h4 style="font-size: 1rem; font-weight: 700; margin: 0; color: ${metrics.team.color};">
+                  <i class="fas fa-users"></i> ${metrics.team.name}
+                </h4>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  ${metrics.count} auditorías realizadas
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Calidad Total</div>
+                <div style="font-size: 2rem; font-weight: 800; color: ${metrics.calidadAvg >= 80 ? '#10b981' : metrics.calidadAvg >= 60 ? '#f59e0b' : '#ef4444'};">
+                  ${metrics.calidadAvg}%
+                </div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+              <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; border-left: 3px solid #38CEA6;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                  <i class="fas fa-heart"></i> Pilar Empatía
+                </div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #38CEA6;">
+                  ${metrics.empatiaAvg}%
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                  (50% del total)
+                </div>
+              </div>
+              <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; border-left: 3px solid #f59e0b;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                  <i class="fas fa-cogs"></i> Pilar Gestión
+                </div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">
+                  ${metrics.gestionAvg}%
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                  (50% del total)
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
   },
   
   loadQualityComparisonChart() {
@@ -2616,24 +2728,57 @@ const App = {
     // Get current data
     const allData = DataManager.getWeeklyMetricsData(year, month);
     
+    // Common header patterns to skip
+    const headerPatterns = [
+      /nombre.*agente/i,
+      /tickets.*resueltos/i,
+      /satisfacción/i,
+      /tiempo.*respuesta/i
+    ];
+    
     lines.forEach((line, lineNum) => {
       try {
+        // Skip empty lines and header rows
+        if (!line.trim()) return;
+        
         // Split by tab, comma, or multiple spaces - handle various Excel paste formats
-        const parts = line.split(/[\t,]+|\s{2,}/).map(p => p.trim()).filter(p => p);
+        const parts = line.split(/\t+/).map(p => p.trim()).filter(p => p && p !== '&nbsp;');
+        
+        // Skip if this looks like a header row
+        if (parts.length > 0 && headerPatterns.some(pattern => pattern.test(parts.join(' ')))) {
+          return;
+        }
         
         if (parts.length < 2) {
-          errors.push(`Línea ${lineNum + 1}: Faltan datos (necesita al menos Agente y Tickets)`);
+          errors.push(`Línea ${lineNum + 1}: Faltan datos (necesita al menos Nombre y Tickets)`);
           errorCount++;
           return;
         }
         
+        // Parse according to Zendesk export format:
+        // Col 0: Nombre del agente asignado
+        // Col 1: Tickets resueltos
+        // Col 2: Tickets con satisfacción mala
+        // Col 3: Tickets con satisfacción buena
+        // Col 4: Tiempo de primera respuesta (s)
+        // Col 5: Tiempo de resolución completa (min)
+        // Col 6: (optional) Tiempo de primera respuesta (min) - duplicate/alternative
+        
         const agentName = parts[0];
         const tickets = parseInt(parts[1]) || 0;
-        const ticketsPerHour = parseFloat(parts[2]) || 0;
-        const ticketsBad = parseInt(parts[3]) || 0;
-        const ticketsGood = parseInt(parts[4]) || 0;
-        const firstResponse = parseFloat(parts[5]) || 0;
-        const resolutionTime = parseFloat(parts[6]) || 0;
+        const ticketsBad = parseInt(parts[2]) || 0;
+        const ticketsGood = parseInt(parts[3]) || 0;
+        const firstResponseSec = parseFloat(parts[4]) || 0;
+        const resolutionTimeMin = parseFloat(parts[5]) || 0;
+        
+        // Calculate tickets per hour (assuming 8-hour work day)
+        // This is an estimate - can be adjusted based on actual work hours
+        const ticketsPerHour = tickets > 0 ? parseFloat((tickets / 8).toFixed(2)) : 0;
+        
+        // Convert first response from seconds to seconds (already in correct unit)
+        const firstResponse = firstResponseSec;
+        // Resolution time is already in minutes
+        const resolutionTime = resolutionTimeMin;
         
         // Initialize agent data if doesn't exist
         if (!allData[agentName]) {

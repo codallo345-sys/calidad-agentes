@@ -209,6 +209,17 @@
               </div>
             </div>
           </div>
+
+          <!-- Team Quality Breakdown -->
+          <div class="glass only-editor" style="padding: 1.5rem; margin-top: 1.5rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 1rem 0; color: var(--text-primary);">
+              <i class="fas fa-chart-pie" style="color: #38CEA6; margin-right: 0.5rem;"></i>
+              Calidad Acumulada por Equipo
+            </h3>
+            <div id="teamQualityBreakdown">
+              <p class="empty">No hay datos disponibles</p>
+            </div>
+          </div>
         </div>
 
         <!-- Audits View -->
@@ -917,21 +928,22 @@
         <p style="margin: 0; font-size: 0.9rem; color: var(--text-primary); line-height: 1.6;">
           <i class="fas fa-info-circle" style="color: #38CEA6;"></i>
           <strong>Instrucciones:</strong><br>
-          1. Copie los datos de Excel/Zendesk con este formato por fila:<br>
-          <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; margin: 0.5rem 0;">
-            Agente | Tickets | Tickets/Hora | Malos | Buenos | Tiempo1aResp | TiempoResol
+          1. Copie los datos directamente desde Excel/Zendesk (incluyendo o sin encabezados)<br>
+          2. Formato esperado por columna:<br>
+          <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; margin: 0.5rem 0; font-size: 0.85rem;">
+            Nombre | Tickets | Satisfacción Mala | Satisfacción Buena | Tiempo 1a Resp(s) | Tiempo Resol(min)
           </code><br>
-          2. Pegue en el cuadro de abajo<br>
-          3. El sistema procesará automáticamente y asignará a la semana actual
+          3. El sistema calculará automáticamente "Tickets por Hora" y "% Calificación"<br>
+          4. Pegue los datos en el cuadro de abajo y seleccione la semana
         </p>
       </div>
 
       <form id="bulkPasteForm">
         <div style="margin-bottom: 1.5rem;">
           <label class="label-small" for="bulkPasteData">
-            <i class="fas fa-table"></i> Datos de Excel (un agente por línea)
+            <i class="fas fa-table"></i> Datos de Excel (un agente por línea, puede incluir encabezados)
           </label>
-          <textarea id="bulkPasteData" class="input-dark" rows="12" placeholder="Pegue aquí los datos copiados desde Excel...&#10;Ejemplo:&#10;María González	150	5.2	2	120	45.5	12.3&#10;Carlos Ramírez	140	4.8	1	130	42.1	11.8" style="font-family: 'Courier New', monospace;"></textarea>
+          <textarea id="bulkPasteData" class="input-dark" rows="12" placeholder="Pegue aquí los datos copiados desde Excel...&#10;Ejemplo (puede copiar con o sin encabezados):&#10;Adriana Rojas	11	1	3	114	26&#10;Nicole Serrano	15	0	4	2740	180&#10;Maryolis Castillo	22	1	3	48	119" style="font-family: 'Courier New', monospace;"></textarea>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
