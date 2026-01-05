@@ -84,10 +84,22 @@ const App = {
       filterMonthMetrics.addEventListener('change', () => this.loadWeeklyMetrics());
     }
 
+    // Team filter for weekly metrics
+    const filterTeamWeekly = document.getElementById('filterTeamWeekly');
+    if (filterTeamWeekly) {
+      filterTeamWeekly.addEventListener('change', () => this.loadWeeklyMetrics());
+    }
+
     // Monthly metrics filter
     const filterMonthlyMetrics = document.getElementById('filterMonthlyMetrics');
     if (filterMonthlyMetrics) {
       filterMonthlyMetrics.addEventListener('change', () => this.loadMonthlyMetrics());
+    }
+
+    // Team filter for monthly metrics
+    const filterTeamMonthly = document.getElementById('filterTeamMonthly');
+    if (filterTeamMonthly) {
+      filterTeamMonthly.addEventListener('change', () => this.loadMonthlyMetrics());
     }
 
     // Close modal on overlay click
@@ -292,8 +304,67 @@ const App = {
       });
     }
 
+    // Initialize team dropdowns
+    this.initializeTeamFilters();
+
+    // Initialize OverlayScrollbars for smooth scrolling
+    this.initializeOverlayScrollbars();
+
     // Load initial view
     this.switchView('dashboard');
+  },
+
+  initializeTeamFilters() {
+    const teams = DataManager.getAllTeams();
+    
+    // Populate weekly metrics team filter
+    const filterTeamWeekly = document.getElementById('filterTeamWeekly');
+    if (filterTeamWeekly) {
+      // Clear existing options except the first one
+      while (filterTeamWeekly.options.length > 1) {
+        filterTeamWeekly.remove(1);
+      }
+      
+      Object.values(teams).forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.name;
+        filterTeamWeekly.appendChild(option);
+      });
+    }
+
+    // Populate monthly metrics team filter
+    const filterTeamMonthly = document.getElementById('filterTeamMonthly');
+    if (filterTeamMonthly) {
+      // Clear existing options except the first one
+      while (filterTeamMonthly.options.length > 1) {
+        filterTeamMonthly.remove(1);
+      }
+      
+      Object.values(teams).forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.name;
+        filterTeamMonthly.appendChild(option);
+      });
+    }
+  },
+
+  initializeOverlayScrollbars() {
+    // Initialize OverlayScrollbars on table scroll containers
+    if (typeof OverlayScrollbars !== 'undefined') {
+      // Apply to all elements with .table-scroll class
+      document.querySelectorAll('.table-scroll').forEach(element => {
+        OverlayScrollbars(element, {
+          scrollbars: {
+            theme: 'os-theme-dark',
+            visibility: 'auto',
+            autoHide: 'never',
+            autoHideDelay: 800
+          }
+        });
+      });
+    }
   },
 
   // View management
@@ -483,12 +554,25 @@ const App = {
     const allAudits = DataManager.getAllAudits();
     const teams = DataManager.getAllTeams();
     
+    // Filter audits to current month only
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const firstDayOfMonth = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    const lastDayString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(lastDayOfMonth.getDate()).padStart(2, '0')}`;
+    
+    const currentMonthAudits = allAudits.filter(audit => {
+      return audit.date >= firstDayOfMonth && audit.date <= lastDayString;
+    });
+    
     const container = document.getElementById('topAgents');
     
-    // Update heading
+    // Update heading to show it's for current month
     const headingElement = container.parentElement.querySelector('h3');
     if (headingElement) {
-      headingElement.innerHTML = '<i class="fas fa-trophy"></i> Agentes con Mejor Calidad en Gestión';
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      headingElement.innerHTML = `<i class="fas fa-trophy"></i> Agentes con Mejor Calidad en Gestión - ${monthNames[currentMonth]} ${currentYear}`;
     }
     
     // For editors: show top 3 from each team
@@ -499,7 +583,7 @@ const App = {
       
       Object.entries(teams).forEach(([teamId, team]) => {
         const teamMemberNames = team.members ? team.members.map(m => m.name) : [];
-        const teamAudits = allAudits.filter(audit => teamMemberNames.includes(audit.agentName));
+        const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
         
         // Calculate agent scores
         const agentScores = {};
@@ -542,7 +626,7 @@ const App = {
                   <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
                 </div>
                 <div style="font-weight: 700; color: #38CEA6; font-size: 1rem;">
-                  ${agent.avgScore}
+                  ${agent.avgScore}%
                 </div>
               </div>
             `).join('')}
@@ -554,7 +638,7 @@ const App = {
       // Show top 3 from user's team only
       const team = teams[userTeam];
       const teamMemberNames = team && team.members ? team.members.map(m => m.name) : [];
-      const teamAudits = allAudits.filter(audit => teamMemberNames.includes(audit.agentName));
+      const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
       
       // Calculate agent scores
       const agentScores = {};
@@ -593,10 +677,13 @@ const App = {
             </div>
           </div>
           <div style="font-weight: 700; color: #38CEA6; font-size: 1.1rem;">
-            ${agent.avgScore}
+            ${agent.avgScore}%
           </div>
         </div>
       `).join('');
+    } else {
+      // For viewers without a team, show empty state
+      container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
     }
   },
   
@@ -1373,6 +1460,10 @@ const App = {
     const userTeam = DataManager.getUserTeam();
     const teams = DataManager.getAllTeams();
     
+    // Get team filter selection (for editors)
+    const filterTeamWeekly = document.getElementById('filterTeamWeekly');
+    const selectedTeamFilter = filterTeamWeekly ? filterTeamWeekly.value : '';
+    
     // Get manual metrics data
     const filterMonthMetrics = document.getElementById('filterMonthMetrics');
     const currentYear = new Date().getFullYear();
@@ -1392,15 +1483,21 @@ const App = {
     // Add agents from manual metrics
     Object.keys(manualData).forEach(agent => allAgents.add(agent));
     
-    // Add all team members if editor, or only current team members if team user
-    if (userTeam) {
-      // Filter to only show agents from user's team
-      const team = teams[userTeam];
+    // Determine which team to show
+    let teamToShow = userTeam; // For non-editors, use their assigned team
+    if (isEditor && selectedTeamFilter) {
+      teamToShow = selectedTeamFilter; // For editors, use selected filter
+    }
+    
+    // Add all team members based on filter
+    if (teamToShow) {
+      // Show only specific team
+      const team = teams[teamToShow];
       if (team && team.members) {
         team.members.forEach(member => allAgents.add(member.name));
       }
-    } else {
-      // Editor or viewer - show all team members
+    } else if (isEditor && !selectedTeamFilter) {
+      // Editor with no filter - show all teams
       Object.values(teams).forEach(team => {
         if (team.members) {
           team.members.forEach(member => allAgents.add(member.name));
@@ -1410,9 +1507,9 @@ const App = {
     
     let agentsList = Array.from(allAgents).sort();
     
-    // Filter agents by team if user is team-specific
-    if (userTeam) {
-      const team = teams[userTeam];
+    // Filter agents by team
+    if (teamToShow) {
+      const team = teams[teamToShow];
       const teamMemberNames = team && team.members ? team.members.map(m => m.name) : [];
       agentsList = agentsList.filter(agent => teamMemberNames.includes(agent));
     }
@@ -1499,7 +1596,6 @@ const App = {
         ticketsGood: 0,
         firstResponse: 0,
         resolutionTime: 0,
-        ticketsRated: 0,
         quality: 0,
         qualityCount: 0,
         weekCount: 0
@@ -1529,16 +1625,21 @@ const App = {
         const ticketsGood = manual.ticketsGood || 0;
         const firstResponse = manual.firstResponse || 0;
         const resolutionTime = manual.resolutionTime || 0;
-        const ticketsRated = manual.ticketsRated || 0;
+        
+        // Calculate % Calif automatically: (ticketsBad + ticketsGood) / tickets * 100
+        let percentCalif = '-';
+        if (tickets > 0) {
+          const ratedTickets = ticketsBad + ticketsGood;
+          percentCalif = ((ratedTickets / tickets) * 100).toFixed(1) + '%';
+        }
         
         // Accumulate for monthly totals
-        if (tickets > 0 || ticketsBad > 0 || ticketsGood > 0 || firstResponse > 0 || resolutionTime > 0 || ticketsRated > 0) {
+        if (tickets > 0 || ticketsBad > 0 || ticketsGood > 0 || firstResponse > 0 || resolutionTime > 0) {
           monthlyTotals.tickets += tickets;
           monthlyTotals.ticketsBad += ticketsBad;
           monthlyTotals.ticketsGood += ticketsGood;
           monthlyTotals.firstResponse += firstResponse;
           monthlyTotals.resolutionTime += resolutionTime;
-          monthlyTotals.ticketsRated += ticketsRated;
           monthlyTotals.weekCount++;
         }
         
@@ -1548,7 +1649,7 @@ const App = {
           <td style="text-align: center;">${ticketsGood || '-'}</td>
           <td style="text-align: center;">${firstResponse || '-'}</td>
           <td style="text-align: center;">${resolutionTime || '-'}</td>
-          <td style="text-align: center;">${ticketsRated || '-'}</td>
+          <td style="text-align: center; font-weight: 600; color: #0ea5e9;">${percentCalif}</td>
           <td style="text-align: center; color: #38CEA6; font-weight: 600;">${qualityPercent}</td>
           ${isEditor ? `<td style="text-align: center;"><button class="btn-mini" onclick="App.openManualMetricsModal('${agentName}', ${weekIndex}, ${currentYear}, ${month})" title="Editar métricas"><i class="fas fa-edit"></i></button></td>` : ''}
         `;
@@ -1557,8 +1658,11 @@ const App = {
       // Add accumulated data
       const avgFirstResponse = monthlyTotals.weekCount > 0 ? Math.round(monthlyTotals.firstResponse / monthlyTotals.weekCount) : 0;
       const avgResolutionTime = monthlyTotals.weekCount > 0 ? Math.round(monthlyTotals.resolutionTime / monthlyTotals.weekCount) : 0;
-      const avgTicketsRated = monthlyTotals.weekCount > 0 ? Math.round(monthlyTotals.ticketsRated / monthlyTotals.weekCount) : 0;
       const avgQuality = monthlyTotals.qualityCount > 0 ? Math.round(monthlyTotals.quality / monthlyTotals.qualityCount) : 0;
+      
+      // Calculate total % Calif: (total rated / total tickets) * 100
+      const totalRated = monthlyTotals.ticketsBad + monthlyTotals.ticketsGood;
+      const totalPercentCalif = monthlyTotals.tickets > 0 ? ((totalRated / monthlyTotals.tickets) * 100).toFixed(1) : 0;
       
       tableHTML += `
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${monthlyTotals.tickets || '-'}</td>
@@ -1566,7 +1670,7 @@ const App = {
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${monthlyTotals.ticketsGood || '-'}</td>
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${avgFirstResponse || '-'}</td>
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${avgResolutionTime || '-'}</td>
-        <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${avgTicketsRated || '-'}%</td>
+        <td style="text-align: center; background: #f0fdf4; font-weight: 700; color: #0ea5e9;">${totalPercentCalif}%</td>
         <td style="text-align: center; background: #f0fdf4; color: #38CEA6; font-weight: 700;">${avgQuality || '-'}%</td>
         ${isEditor ? '<td style="background: #f0fdf4;"></td>' : ''}
       `;
@@ -1614,8 +1718,8 @@ const App = {
     const audits = DataManager.getAuditsByMonth(currentYear, month);
     const metrics = DataManager.calculateMetrics(audits);
     
-    // Calculate active weeks
-    const weeks = DataManager.getWeeksOfMonth(currentYear, month);
+    // Calculate active weeks - use configured weeks
+    const weeks = DataManager.getWeekConfig(currentYear, month);
     const activeWeeks = weeks.length;
 
     // Render the content
@@ -1624,22 +1728,34 @@ const App = {
 
   renderMonthlyMetricsContent(monthName, metrics, activeWeeks, audits, weeks, year, month) {
     const container = document.getElementById('monthlyMetricsContent');
+    const isEditor = DataManager.isEditor();
     const userTeam = DataManager.getUserTeam();
     const teams = DataManager.getAllTeams();
     const manualData = DataManager.getWeeklyMetricsData(year, month);
+    
+    // Get team filter selection (for editors)
+    const filterTeamMonthly = document.getElementById('filterTeamMonthly');
+    const selectedTeamFilter = filterTeamMonthly ? filterTeamMonthly.value : '';
     
     // Get all agents with their week data
     const allAgents = new Set();
     audits.forEach(audit => allAgents.add(audit.agentName));
     Object.keys(manualData).forEach(agent => allAgents.add(agent));
     
-    // Add all team members
-    if (userTeam) {
-      const team = teams[userTeam];
+    // Determine which team to show
+    let teamToShow = userTeam; // For non-editors, use their assigned team
+    if (isEditor && selectedTeamFilter) {
+      teamToShow = selectedTeamFilter; // For editors, use selected filter
+    }
+    
+    // Add team members based on filter
+    if (teamToShow) {
+      const team = teams[teamToShow];
       if (team && team.members) {
         team.members.forEach(member => allAgents.add(member.name));
       }
-    } else {
+    } else if (isEditor && !selectedTeamFilter) {
+      // Editor with no filter - show all teams
       Object.values(teams).forEach(team => {
         if (team.members) {
           team.members.forEach(member => allAgents.add(member.name));
@@ -1649,9 +1765,9 @@ const App = {
     
     let agentsList = Array.from(allAgents).sort();
     
-    // Filter by team if applicable
-    if (userTeam) {
-      const team = teams[userTeam];
+    // Filter by team
+    if (teamToShow) {
+      const team = teams[teamToShow];
       const teamMemberNames = team && team.members ? team.members.map(m => m.name) : [];
       agentsList = agentsList.filter(agent => teamMemberNames.includes(agent));
     }
@@ -1667,7 +1783,6 @@ const App = {
         <table class="data-table" style="font-size: 0.85rem;">
           <thead>
             <tr>
-              <th style="min-width: 100px;">Turno Semana</th>
               <th style="min-width: 140px;">Nombre del Agente</th>
               <th>Tickets</th>
               <th>Calif. Malos</th>
@@ -1683,8 +1798,18 @@ const App = {
           <tbody>
     `;
     
-    // Process each agent and their weekly data
+    // Process each agent - accumulate totals across ALL weeks
     agentsList.forEach(agentName => {
+      // Accumulate data for this agent across all weeks
+      let totalTickets = 0;
+      let totalTicketsBad = 0;
+      let totalTicketsGood = 0;
+      let totalFirstResponse = 0;
+      let totalResolutionTime = 0;
+      let qualitySum = 0;
+      let qualityCount = 0;
+      let weekCount = 0;
+      
       weeks.forEach((week, weekIndex) => {
         const manual = manualData[agentName] && manualData[agentName][weekIndex] ? manualData[agentName][weekIndex] : {};
         
@@ -1693,64 +1818,77 @@ const App = {
           return audit.agentName === agentName && audit.date >= week.startDate && audit.date <= week.endDate;
         });
         
-        let qualityPercent = 0;
+        // Accumulate manual metrics
+        if (manual.tickets || weekAudits.length > 0) {
+          totalTickets += manual.tickets || 0;
+          totalTicketsBad += manual.ticketsBad || 0;
+          totalTicketsGood += manual.ticketsGood || 0;
+          totalFirstResponse += manual.firstResponse || 0;
+          totalResolutionTime += manual.resolutionTime || 0;
+          weekCount++;
+        }
+        
+        // Accumulate quality scores
         if (weekAudits.length > 0) {
           const totalScore = weekAudits.reduce((sum, a) => sum + parseFloat(a.score || 0), 0);
-          qualityPercent = Math.round(totalScore / weekAudits.length);
-        }
-        
-        const tickets = manual.tickets || 0;
-        const ticketsBad = manual.ticketsBad || 0;
-        const ticketsGood = manual.ticketsGood || 0;
-        const firstResponse = manual.firstResponse || 0;
-        const resolutionTime = manual.resolutionTime || 0;
-        const ticketsRated = manual.ticketsRated || 0;
-        
-        // Calculate % Calif (based on good + bad / total tickets)
-        let percentCalif = 0;
-        if (tickets > 0) {
-          percentCalif = ((ticketsBad + ticketsGood) / tickets * 100).toFixed(1);
-        }
-        
-        // Calculate % Calif Positivos (good tickets / total rated tickets)
-        let percentCalifPositivos = 0;
-        const totalRated = ticketsBad + ticketsGood;
-        if (totalRated > 0) {
-          percentCalifPositivos = (ticketsGood / totalRated * 100).toFixed(1);
-        }
-        
-        // % Satisfacción (good tickets / total tickets)
-        let percentSatisfaccion = 0;
-        if (tickets > 0) {
-          percentSatisfaccion = (ticketsGood / tickets * 100).toFixed(1);
-        }
-        
-        // Only show row if there's any data
-        if (tickets > 0 || ticketsBad > 0 || ticketsGood > 0 || qualityPercent > 0) {
-          content += `
-            <tr>
-              <td>Semana ${weekIndex + 1}</td>
-              <td><strong>${agentName}</strong></td>
-              <td style="text-align: center;">${tickets || '-'}</td>
-              <td style="text-align: center;">${ticketsBad || '-'}</td>
-              <td style="text-align: center;">${ticketsGood || '-'}</td>
-              <td style="text-align: center;">${firstResponse || '-'}</td>
-              <td style="text-align: center;">${resolutionTime || '-'}</td>
-              <td style="text-align: center;">${percentCalif || '-'}%</td>
-              <td style="text-align: center; color: #38CEA6; font-weight: 600;">${qualityPercent || '-'}%</td>
-              <td style="text-align: center; color: #10b981; font-weight: 600;">${percentCalifPositivos || '-'}%</td>
-              <td style="text-align: center; color: #0ea5e9; font-weight: 600;">${percentSatisfaccion || '-'}%</td>
-            </tr>
-          `;
+          qualitySum += totalScore / weekAudits.length;
+          qualityCount++;
         }
       });
+      
+      // Calculate averages and percentages for the agent
+      const avgFirstResponse = weekCount > 0 ? Math.round(totalFirstResponse / weekCount) : 0;
+      const avgResolutionTime = weekCount > 0 ? Math.round(totalResolutionTime / weekCount) : 0;
+      const avgQuality = qualityCount > 0 ? Math.round(qualitySum / qualityCount) : 0;
+      
+      // Calculate % Calif (automatically based on good + bad / total tickets)
+      let percentCalif = 0;
+      if (totalTickets > 0) {
+        percentCalif = ((totalTicketsBad + totalTicketsGood) / totalTickets * 100).toFixed(1);
+      }
+      
+      // Calculate % Calif Positivos (good tickets / total rated tickets)
+      let percentCalifPositivos = 0;
+      const totalRated = totalTicketsBad + totalTicketsGood;
+      if (totalRated > 0) {
+        percentCalifPositivos = (totalTicketsGood / totalRated * 100).toFixed(1);
+      }
+      
+      // % Satisfacción (good tickets / total tickets)
+      let percentSatisfaccion = 0;
+      if (totalTickets > 0) {
+        percentSatisfaccion = (totalTicketsGood / totalTickets * 100).toFixed(1);
+      }
+      
+      // Display one row per agent with accumulated totals
+      content += `
+        <tr>
+          <td><strong>${agentName}</strong></td>
+          <td style="text-align: center;">${totalTickets || '-'}</td>
+          <td style="text-align: center;">${totalTicketsBad || '-'}</td>
+          <td style="text-align: center;">${totalTicketsGood || '-'}</td>
+          <td style="text-align: center;">${avgFirstResponse || '-'}</td>
+          <td style="text-align: center;">${avgResolutionTime || '-'}</td>
+          <td style="text-align: center; font-weight: 600; color: #0ea5e9;">${percentCalif ? percentCalif + '%' : '-'}</td>
+          <td style="text-align: center; color: #38CEA6; font-weight: 600;">${avgQuality || '-'}${avgQuality ? '%' : ''}</td>
+          <td style="text-align: center; color: #10b981; font-weight: 600;">${percentCalifPositivos ? percentCalifPositivos + '%' : '-'}</td>
+          <td style="text-align: center; color: #0ea5e9; font-weight: 600;">${percentSatisfaccion ? percentSatisfaccion + '%' : '-'}</td>
+        </tr>
+      `;
     });
     
     // Add totals/averages row
-    let totalTickets = 0, totalBad = 0, totalGood = 0, totalFirstResp = 0, totalResol = 0;
-    let qualitySum = 0, qualityCount = 0, rowCount = 0;
+    let grandTotalTickets = 0, grandTotalBad = 0, grandTotalGood = 0;
+    let grandTotalFirstResp = 0, grandTotalResol = 0;
+    let grandQualitySum = 0, grandQualityCount = 0;
+    let agentCount = 0;
     
     agentsList.forEach(agentName => {
+      let agentHasData = false;
+      let agentTotalFirstResp = 0;
+      let agentTotalResol = 0;
+      let agentWeekCount = 0;
+      
       weeks.forEach((week, weekIndex) => {
         const manual = manualData[agentName] && manualData[agentName][weekIndex] ? manualData[agentName][weekIndex] : {};
         const weekAudits = audits.filter(audit => {
@@ -1758,36 +1896,45 @@ const App = {
         });
         
         if (manual.tickets || weekAudits.length > 0) {
-          totalTickets += manual.tickets || 0;
-          totalBad += manual.ticketsBad || 0;
-          totalGood += manual.ticketsGood || 0;
-          totalFirstResp += manual.firstResponse || 0;
-          totalResol += manual.resolutionTime || 0;
-          
-          if (weekAudits.length > 0) {
-            const totalScore = weekAudits.reduce((sum, a) => sum + parseFloat(a.score || 0), 0);
-            qualitySum += totalScore / weekAudits.length;
-            qualityCount++;
-          }
-          rowCount++;
+          agentHasData = true;
+          grandTotalTickets += manual.tickets || 0;
+          grandTotalBad += manual.ticketsBad || 0;
+          grandTotalGood += manual.ticketsGood || 0;
+          agentTotalFirstResp += manual.firstResponse || 0;
+          agentTotalResol += manual.resolutionTime || 0;
+          agentWeekCount++;
+        }
+        
+        if (weekAudits.length > 0) {
+          const totalScore = weekAudits.reduce((sum, a) => sum + parseFloat(a.score || 0), 0);
+          grandQualitySum += totalScore / weekAudits.length;
+          grandQualityCount++;
         }
       });
+      
+      if (agentHasData) {
+        agentCount++;
+        if (agentWeekCount > 0) {
+          grandTotalFirstResp += agentTotalFirstResp / agentWeekCount;
+          grandTotalResol += agentTotalResol / agentWeekCount;
+        }
+      }
     });
     
-    const avgFirstResp = rowCount > 0 ? Math.round(totalFirstResp / rowCount) : 0;
-    const avgResol = rowCount > 0 ? Math.round(totalResol / rowCount) : 0;
-    const avgQuality = qualityCount > 0 ? Math.round(qualitySum / qualityCount) : 0;
-    const totalRated = totalBad + totalGood;
-    const percentCalifTotal = totalTickets > 0 ? ((totalRated / totalTickets) * 100).toFixed(1) : 0;
-    const percentCalifPositivosTotal = totalRated > 0 ? ((totalGood / totalRated) * 100).toFixed(1) : 0;
-    const percentSatisfaccionTotal = totalTickets > 0 ? ((totalGood / totalTickets) * 100).toFixed(1) : 0;
+    const avgFirstResp = agentCount > 0 ? Math.round(grandTotalFirstResp / agentCount) : 0;
+    const avgResol = agentCount > 0 ? Math.round(grandTotalResol / agentCount) : 0;
+    const avgQuality = grandQualityCount > 0 ? Math.round(grandQualitySum / grandQualityCount) : 0;
+    const grandTotalRated = grandTotalBad + grandTotalGood;
+    const percentCalifTotal = grandTotalTickets > 0 ? ((grandTotalRated / grandTotalTickets) * 100).toFixed(1) : 0;
+    const percentCalifPositivosTotal = grandTotalRated > 0 ? ((grandTotalGood / grandTotalRated) * 100).toFixed(1) : 0;
+    const percentSatisfaccionTotal = grandTotalTickets > 0 ? ((grandTotalGood / grandTotalTickets) * 100).toFixed(1) : 0;
     
     content += `
             <tr style="background: #f0fdf4; font-weight: 700;">
-              <td colspan="2"><strong>PROMEDIO / TOTAL</strong></td>
-              <td style="text-align: center;">${totalTickets}</td>
-              <td style="text-align: center;">${totalBad}</td>
-              <td style="text-align: center;">${totalGood}</td>
+              <td><strong>PROMEDIO / TOTAL</strong></td>
+              <td style="text-align: center;">${grandTotalTickets}</td>
+              <td style="text-align: center;">${grandTotalBad}</td>
+              <td style="text-align: center;">${grandTotalGood}</td>
               <td style="text-align: center;">${avgFirstResp}</td>
               <td style="text-align: center;">${avgResol}</td>
               <td style="text-align: center;">${percentCalifTotal}%</td>
@@ -2145,7 +2292,6 @@ const App = {
     document.getElementById('metricTicketsGood').value = agentData.ticketsGood || 0;
     document.getElementById('metricFirstResponse').value = agentData.firstResponse || 0;
     document.getElementById('metricResolutionTime').value = agentData.resolutionTime || 0;
-    document.getElementById('metricTicketsRated').value = agentData.ticketsRated || 0;
     
     document.getElementById('manualMetricsModal').classList.remove('hidden');
   },
@@ -2167,8 +2313,7 @@ const App = {
       ticketsBad: parseInt(document.getElementById('metricTicketsBad').value) || 0,
       ticketsGood: parseInt(document.getElementById('metricTicketsGood').value) || 0,
       firstResponse: parseFloat(document.getElementById('metricFirstResponse').value) || 0,
-      resolutionTime: parseFloat(document.getElementById('metricResolutionTime').value) || 0,
-      ticketsRated: parseFloat(document.getElementById('metricTicketsRated').value) || 0
+      resolutionTime: parseFloat(document.getElementById('metricResolutionTime').value) || 0
     };
     
     // Get current data
@@ -2189,6 +2334,36 @@ const App = {
     this.loadWeeklyMetrics();
     
     alert('Métricas guardadas exitosamente');
+  },
+
+  updateShiftLabel(agentName, weekIndex, shiftValue, year, month) {
+    // Get current data
+    const allData = DataManager.getWeeklyMetricsData(year, month);
+    
+    // Initialize agent data if doesn't exist
+    if (!allData[agentName]) {
+      allData[agentName] = {};
+    }
+    
+    // Initialize week data if doesn't exist
+    if (!allData[agentName][weekIndex]) {
+      allData[agentName][weekIndex] = {
+        tickets: 0,
+        ticketsBad: 0,
+        ticketsGood: 0,
+        firstResponse: 0,
+        resolutionTime: 0
+      };
+    }
+    
+    // Update shift value
+    allData[agentName][weekIndex].shift = shiftValue;
+    
+    // Save back to storage
+    DataManager.saveWeeklyMetricsData(year, month, allData);
+    
+    // Optionally reload to show changes (but not necessary as the input already shows the new value)
+    // this.loadMonthlyMetrics();
   }
 };
 

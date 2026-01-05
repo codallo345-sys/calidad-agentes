@@ -6,7 +6,9 @@
   <title>Auditorías de Calidad - Ridery 2026</title>
   <link rel="stylesheet" href="./assets/css/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.4.6/styles/overlayscrollbars.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.4.6/browser/overlayscrollbars.browser.es5.min.js"></script>
 </head>
 <body class="bg-grid">
   
@@ -308,7 +310,15 @@
                   Rendimiento de auditorías y métricas manuales por semana
                 </p>
               </div>
-              <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <div style="min-width: 200px;" class="only-editor">
+                  <label class="label-small" for="filterTeamWeekly">
+                    <i class="fas fa-users"></i> Filtrar por Equipo
+                  </label>
+                  <select id="filterTeamWeekly" class="input-dark" style="width: 100%;">
+                    <option value="">Todos los Equipos</option>
+                  </select>
+                </div>
                 <div style="min-width: 200px;">
                   <label class="label-small" for="filterMonthMetrics">
                     <i class="fas fa-calendar-alt"></i> Seleccionar Mes
@@ -356,25 +366,35 @@
                   Análisis completo del mes seleccionado
                 </p>
               </div>
-              <div style="min-width: 200px;">
-                <label class="label-small" for="filterMonthlyMetrics">
-                  <i class="fas fa-calendar-alt"></i> Seleccionar Mes
-                </label>
-                <select id="filterMonthlyMetrics" class="input-dark" style="width: 100%;">
-                  <option value="">Seleccionar mes...</option>
-                  <option value="0">Enero</option>
-                  <option value="1">Febrero</option>
-                  <option value="2">Marzo</option>
-                  <option value="3">Abril</option>
-                  <option value="4">Mayo</option>
-                  <option value="5">Junio</option>
-                  <option value="6">Julio</option>
-                  <option value="7">Agosto</option>
-                  <option value="8">Septiembre</option>
-                  <option value="9">Octubre</option>
-                  <option value="10">Noviembre</option>
-                  <option value="11">Diciembre</option>
-                </select>
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <div style="min-width: 200px;" class="only-editor">
+                  <label class="label-small" for="filterTeamMonthly">
+                    <i class="fas fa-users"></i> Filtrar por Equipo
+                  </label>
+                  <select id="filterTeamMonthly" class="input-dark" style="width: 100%;">
+                    <option value="">Todos los Equipos</option>
+                  </select>
+                </div>
+                <div style="min-width: 200px;">
+                  <label class="label-small" for="filterMonthlyMetrics">
+                    <i class="fas fa-calendar-alt"></i> Seleccionar Mes
+                  </label>
+                  <select id="filterMonthlyMetrics" class="input-dark" style="width: 100%;">
+                    <option value="">Seleccionar mes...</option>
+                    <option value="0">Enero</option>
+                    <option value="1">Febrero</option>
+                    <option value="2">Marzo</option>
+                    <option value="3">Abril</option>
+                    <option value="4">Mayo</option>
+                    <option value="5">Junio</option>
+                    <option value="6">Julio</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Septiembre</option>
+                    <option value="9">Octubre</option>
+                    <option value="10">Noviembre</option>
+                    <option value="11">Diciembre</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -842,18 +862,16 @@
             </label>
             <input type="number" id="metricResolutionTime" class="input-dark" min="0" step="0.1" value="0">
           </div>
-          <div>
-            <label class="label-small" for="metricTicketsRated">
-              <i class="fas fa-percent"></i> % Tickets Calificados
-            </label>
-            <input type="number" id="metricTicketsRated" class="input-dark" min="0" max="100" step="0.1" value="0">
-          </div>
         </div>
 
-        <div style="background: #fef3f2; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+        <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
           <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+            <i class="fas fa-info-circle" style="color: #38CEA6;"></i>
+            <strong>% Calif</strong> (% Tickets Calificados) se calcula automáticamente: <code>(Calif. Malos + Calif. Buena) / Tickets × 100</code>
+          </p>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
             <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
-            El % Calidad se calcula automáticamente desde las auditorías registradas.
+            <strong>% Calidad</strong> se calcula automáticamente desde las auditorías registradas.
           </p>
         </div>
 

@@ -8,6 +8,7 @@
     "build": "echo 'Static site - no build needed'"
   },
   "dependencies": {
-    "chart.js": "^4.4.1"
+    "chart.js": "^4.4.1",
+    "overlayscrollbars": "^2.4.6"
   }
 }

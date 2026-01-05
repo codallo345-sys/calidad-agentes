@@ -234,15 +234,30 @@ const DataManager = {
   // Get audits by month
   getAuditsByMonth(year, month) {
     const audits = this.getAllAudits();
-    return audits.filter(audit => {
+    let filteredAudits = audits.filter(audit => {
       const auditDate = new Date(audit.date);
       return auditDate.getFullYear() === year && auditDate.getMonth() === month;
     });
+    
+    // Apply team-based filtering for team users
+    const userTeam = this.getUserTeam();
+    if (userTeam) {
+      filteredAudits = filteredAudits.filter(audit => audit.teamId === userTeam);
+    }
+    
+    return filteredAudits;
   },
 
   // Search and filter
   searchAudits(searchTerm, teamFilter) {
     let audits = this.getAllAudits();
+    
+    // Apply team-based filtering for team users
+    const userTeam = this.getUserTeam();
+    if (userTeam) {
+      // If user belongs to a specific team, only show audits from that team
+      audits = audits.filter(audit => audit.teamId === userTeam);
+    }
     
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
