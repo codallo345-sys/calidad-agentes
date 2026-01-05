@@ -24,24 +24,24 @@ const DataManager = {
   // Default agents (2 per team as examples)
   DEFAULT_AGENTS: {
     'soporte-usuarios': [
-      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios' },
-      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios' }
+      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios', shift: 'AM' },
+      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios', shift: 'PM' }
     ],
     'soporte-conductores': [
-      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores' },
-      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores' }
+      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores', shift: 'AM' },
+      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores', shift: 'Weekend' }
     ],
     'soporte-ecr': [
-      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr' },
-      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr' }
+      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr', shift: 'PM' },
+      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr', shift: 'AM' }
     ],
     'soporte-corporativo': [
-      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo' },
-      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo' }
+      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo', shift: 'AM' },
+      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo', shift: 'PM' }
     ],
     'soporte-delivery': [
-      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery' },
-      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery' }
+      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery', shift: 'Weekend' },
+      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery', shift: 'AM' }
     ]
   },
 

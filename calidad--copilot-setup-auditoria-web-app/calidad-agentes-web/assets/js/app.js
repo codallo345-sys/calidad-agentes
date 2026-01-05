@@ -572,13 +572,13 @@ const App = {
     const headingElement = container.parentElement.querySelector('h3');
     if (headingElement) {
       const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-      headingElement.innerHTML = `<i class="fas fa-trophy"></i> Agentes con Mejor Calidad en Gestión - ${monthNames[currentMonth]} ${currentYear}`;
+      headingElement.innerHTML = `<i class="fas fa-star"></i> Mejores y Con Oportunidad de Mejora - ${monthNames[currentMonth]} ${currentYear}`;
     }
     
-    // For editors: show top 3 from each team
-    // For team users: show top 3 from their team only
+    // For editors: show top 2 best + 3 lowest from each team
+    // For team users: show top 2 best + 3 lowest from their team only
     if (isEditor) {
-      // Show top 3 from each team
+      // Show top 2 best + 3 lowest from each team
       const teamRankings = {};
       
       Object.entries(teams).forEach(([teamId, team]) => {
@@ -595,47 +595,74 @@ const App = {
           agentScores[audit.agentName].count++;
         });
         
-        // Get top 3
-        const top3 = Object.entries(agentScores)
+        // Sort all agents by score
+        const sortedAgents = Object.entries(agentScores)
           .map(([name, data]) => ({
             name,
             avgScore: Math.round(data.total / data.count),
             count: data.count
           }))
-          .sort((a, b) => b.avgScore - a.avgScore)
-          .slice(0, 3);
+          .sort((a, b) => b.avgScore - a.avgScore);
         
-        teamRankings[teamId] = { team, top3 };
+        // Get top 2 best and bottom 3 lowest
+        const top2 = sortedAgents.slice(0, 2);
+        const bottom3 = sortedAgents.length > 2 ? sortedAgents.slice(-3).reverse() : [];
+        
+        teamRankings[teamId] = { team, top2, bottom3 };
       });
       
       container.innerHTML = Object.entries(teamRankings).map(([teamId, data]) => {
-        if (!data.top3.length) return '';
-        
-        const medals = ['🥇', '🥈', '🥉'];
+        if (!data.top2.length && !data.bottom3.length) return '';
         
         return `
-          <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid ${data.team.color};">
-            <div style="font-weight: 700; color: ${data.team.color}; margin-bottom: 0.5rem;">
+          <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid ${data.team.color};">
+            <div style="font-weight: 700; color: ${data.team.color}; margin-bottom: 0.75rem; font-size: 1rem;">
               ${data.team.name}
             </div>
-            ${data.top3.map((agent, index) => `
-              <div style="padding: 0.4rem 0; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <span style="font-size: 1.2rem; margin-right: 0.5rem;">${medals[index]}</span>
-                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
-                  <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
+            ${data.top2.length > 0 ? `
+              <div style="margin-bottom: 0.75rem;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i class="fas fa-trophy"></i> Mejores Agentes
                 </div>
-                <div style="font-weight: 700; color: #38CEA6; font-size: 1rem;">
-                  ${agent.avgScore}%
-                </div>
+                ${data.top2.map((agent, index) => `
+                  <div style="padding: 0.4rem 0.5rem; display: flex; justify-content: space-between; align-items: center; background: ${index === 0 ? '#f0fdf4' : '#f0f9ff'}; border-radius: 0.375rem; margin-bottom: 0.25rem;">
+                    <div>
+                      <span style="font-size: 1.2rem; margin-right: 0.5rem;">${index === 0 ? '🥇' : '🥈'}</span>
+                      <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                      <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
+                    </div>
+                    <div style="font-weight: 700; color: #10b981; font-size: 1rem;">
+                      ${agent.avgScore}%
+                    </div>
+                  </div>
+                `).join('')}
               </div>
-            `).join('')}
+            ` : ''}
+            ${data.bottom3.length > 0 ? `
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i class="fas fa-exclamation-triangle"></i> Con Oportunidad de Mejora
+                </div>
+                ${data.bottom3.map((agent, index) => `
+                  <div style="padding: 0.4rem 0.5rem; display: flex; justify-content: space-between; align-items: center; background: #fef3f2; border-radius: 0.375rem; margin-bottom: 0.25rem;">
+                    <div>
+                      <span style="font-size: 1rem; margin-right: 0.5rem;">📊</span>
+                      <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                      <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
+                    </div>
+                    <div style="font-weight: 700; color: #f59e0b; font-size: 1rem;">
+                      ${agent.avgScore}%
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
           </div>
         `;
       }).join('');
       
     } else if (userTeam) {
-      // Show top 3 from user's team only
+      // Show top 2 best + 3 lowest from user's team only
       const team = teams[userTeam];
       const teamMemberNames = team && team.members ? team.members.map(m => m.name) : [];
       const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
@@ -650,37 +677,68 @@ const App = {
         agentScores[audit.agentName].count++;
       });
       
-      // Get top 3
-      const top3 = Object.entries(agentScores)
+      // Sort all agents by score
+      const sortedAgents = Object.entries(agentScores)
         .map(([name, data]) => ({
           name,
           avgScore: Math.round(data.total / data.count),
           count: data.count
         }))
-        .sort((a, b) => b.avgScore - a.avgScore)
-        .slice(0, 3);
+        .sort((a, b) => b.avgScore - a.avgScore);
       
-      if (top3.length === 0) {
+      // Get top 2 best and bottom 3 lowest
+      const top2 = sortedAgents.slice(0, 2);
+      const bottom3 = sortedAgents.length > 2 ? sortedAgents.slice(-3).reverse() : [];
+      
+      if (top2.length === 0 && bottom3.length === 0) {
         container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
         return;
       }
       
-      const medals = ['🥇', '🥈', '🥉'];
-      
-      container.innerHTML = top3.map((agent, index) => `
-        <div style="padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <span style="font-size: 1.3rem; margin-right: 0.5rem;">${medals[index]}</span>
-            <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
-            <div style="font-size: 0.85rem; color: ${team.color};">
-              ${team.name} • ${agent.count} auditorías
+      container.innerHTML = `
+        ${top2.length > 0 ? `
+          <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <i class="fas fa-trophy"></i> Mejores Agentes
             </div>
+            ${top2.map((agent, index) => `
+              <div style="padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; background: ${index === 0 ? '#f0fdf4' : '#f0f9ff'}; border-radius: 0.375rem; margin-bottom: 0.5rem;">
+                <div>
+                  <span style="font-size: 1.3rem; margin-right: 0.5rem;">${index === 0 ? '🥇' : '🥈'}</span>
+                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                  <div style="font-size: 0.85rem; color: ${team.color};">
+                    ${team.name} • ${agent.count} auditorías
+                  </div>
+                </div>
+                <div style="font-weight: 700; color: #10b981; font-size: 1.1rem;">
+                  ${agent.avgScore}%
+                </div>
+              </div>
+            `).join('')}
           </div>
-          <div style="font-weight: 700; color: #38CEA6; font-size: 1.1rem;">
-            ${agent.avgScore}%
+        ` : ''}
+        ${bottom3.length > 0 ? `
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+              <i class="fas fa-exclamation-triangle"></i> Con Oportunidad de Mejora
+            </div>
+            ${bottom3.map((agent) => `
+              <div style="padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; background: #fef3f2; border-radius: 0.375rem; margin-bottom: 0.5rem;">
+                <div>
+                  <span style="font-size: 1rem; margin-right: 0.5rem;">📊</span>
+                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
+                  <div style="font-size: 0.85rem; color: ${team.color};">
+                    ${team.name} • ${agent.count} auditorías
+                  </div>
+                </div>
+                <div style="font-weight: 700; color: #f59e0b; font-size: 1.1rem;">
+                  ${agent.avgScore}%
+                </div>
+              </div>
+            `).join('')}
           </div>
-        </div>
-      `).join('');
+        ` : ''}
+      `;
     } else {
       // For viewers without a team, show empty state
       container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
@@ -931,9 +989,12 @@ const App = {
           ${team.members.length === 0 ? '<p class="empty">No hay integrantes en este equipo</p>' : ''}
           ${team.members.map(member => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid ${team.color};">
-              <div>
+              <div style="flex: 1;">
                 <div style="font-weight: 600; color: var(--text-primary);">${member.name}</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">${member.email}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                  <i class="fas fa-envelope"></i> ${member.email}
+                  ${member.shift ? ` • <i class="fas fa-clock"></i> Turno: <span style="font-weight: 600; color: ${team.color};">${member.shift}</span>` : ''}
+                </div>
               </div>
               <button class="btn-mini danger" onclick="App.removeMember('${team.id}', '${member.email}')" title="Eliminar">
                 <i class="fas fa-trash"></i>
@@ -958,9 +1019,14 @@ const App = {
       return;
     }
     
+    const shift = prompt(`Turno del integrante:\n\nEscriba: AM, PM o Weekend`);
+    const validShifts = ['AM', 'PM', 'Weekend'];
+    const shiftValue = shift && validShifts.includes(shift.trim()) ? shift.trim() : 'AM';
+    
     const success = DataManager.addTeamMember(teamId, {
       name: name.trim(),
-      email: email.toLowerCase().trim()
+      email: email.toLowerCase().trim(),
+      shift: shiftValue
     });
     
     if (success) {
@@ -2056,24 +2122,47 @@ const App = {
     // Calculate Empatía (50% total)
     const empatiaCriteria = ['metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia'];
     const empatiaChecked = this.countCheckedCriteria(empatiaCriteria);
-    const empatiaPercent = (empatiaChecked / empatiaCriteria.length) * 100; // % del pilar
-    const empatiaTotalPercent = (empatiaChecked / empatiaCriteria.length) * 50; // % del total
+    const empatiaErrors = empatiaCriteria.length - empatiaChecked;
     
     // Calculate Gestión (50% total) - 3 subcategories of 33.33% each
     // Gestión de ticket (33.33% of 50% = 16.67% of total)
     const gestionTicketCriteria = ['estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion'];
     const gestionTicketChecked = this.countCheckedCriteria(gestionTicketCriteria);
-    const gestionTicketScore = (gestionTicketChecked / gestionTicketCriteria.length) * 16.67;
+    const gestionTicketErrors = gestionTicketCriteria.length - gestionTicketChecked;
     
     // Conocimiento Integral (33.33% of 50% = 16.67% of total)
     const conocimientoCriteria = ['serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia'];
     const conocimientoChecked = this.countCheckedCriteria(conocimientoCriteria);
-    const conocimientoScore = (conocimientoChecked / conocimientoCriteria.length) * 16.67;
+    const conocimientoErrors = conocimientoCriteria.length - conocimientoChecked;
     
     // Uso estratégico de herramientas (33.33% of 50% = 16.67% of total)
     const herramientasCriteria = ['rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'];
     const herramientasChecked = this.countCheckedCriteria(herramientasCriteria);
-    const herramientasScore = (herramientasChecked / herramientasCriteria.length) * 16.67;
+    const herramientasErrors = herramientasCriteria.length - herramientasChecked;
+    
+    // STRICT RULE: 2 or more errors in any section = 0 points for that section
+    // Justification: bajo estándares de calidad, o la gestión está bien o está mal (margen de error humano de 2)
+    let empatiaTotalPercent = 0;
+    let empatiaPercent = 0;
+    if (empatiaErrors < 2) {
+      empatiaPercent = (empatiaChecked / empatiaCriteria.length) * 100; // % del pilar
+      empatiaTotalPercent = (empatiaChecked / empatiaCriteria.length) * 50; // % del total
+    }
+    
+    let gestionTicketScore = 0;
+    if (gestionTicketErrors < 2) {
+      gestionTicketScore = (gestionTicketChecked / gestionTicketCriteria.length) * 16.67;
+    }
+    
+    let conocimientoScore = 0;
+    if (conocimientoErrors < 2) {
+      conocimientoScore = (conocimientoChecked / conocimientoCriteria.length) * 16.67;
+    }
+    
+    let herramientasScore = 0;
+    if (herramientasErrors < 2) {
+      herramientasScore = (herramientasChecked / herramientasCriteria.length) * 16.67;
+    }
     
     // Total gestión
     const gestionTotalPercent = gestionTicketScore + conocimientoScore + herramientasScore;
@@ -2288,6 +2377,7 @@ const App = {
     const agentData = manualData[agentName] && manualData[agentName][weekIndex] ? manualData[agentName][weekIndex] : {};
     
     document.getElementById('metricTickets').value = agentData.tickets || 0;
+    document.getElementById('metricTicketsPerHour').value = agentData.ticketsPerHour || 0;
     document.getElementById('metricTicketsBad').value = agentData.ticketsBad || 0;
     document.getElementById('metricTicketsGood').value = agentData.ticketsGood || 0;
     document.getElementById('metricFirstResponse').value = agentData.firstResponse || 0;
@@ -2310,6 +2400,7 @@ const App = {
     
     const metricsData = {
       tickets: parseInt(document.getElementById('metricTickets').value) || 0,
+      ticketsPerHour: parseFloat(document.getElementById('metricTicketsPerHour').value) || 0,
       ticketsBad: parseInt(document.getElementById('metricTicketsBad').value) || 0,
       ticketsGood: parseInt(document.getElementById('metricTicketsGood').value) || 0,
       firstResponse: parseFloat(document.getElementById('metricFirstResponse').value) || 0,
