@@ -2609,6 +2609,34 @@ const App = {
     
     // Optionally reload to show changes (but not necessary as the input already shows the new value)
     // this.loadMonthlyMetrics();
+  },
+
+  // Observation field management for criteria
+  toggleObservationField(criterionId) {
+    const checkbox = document.getElementById(criterionId);
+    const obsField = document.getElementById(`obs-${criterionId}`);
+    
+    if (!checkbox || !obsField) return;
+    
+    // Show observation field when checkbox is UNCHECKED (error)
+    if (!checkbox.checked) {
+      obsField.style.display = 'block';
+    } else {
+      obsField.style.display = 'none';
+      // Clear observation when checked (no error)
+      const textarea = obsField.querySelector('textarea');
+      if (textarea) textarea.value = '';
+    }
+  },
+
+  showObservationField(criterionId) {
+    const obsField = document.getElementById(`obs-${criterionId}`);
+    if (obsField) {
+      obsField.style.display = 'block';
+      // Focus on the textarea
+      const textarea = obsField.querySelector('textarea');
+      if (textarea) textarea.focus();
+    }
   }
 };
 
