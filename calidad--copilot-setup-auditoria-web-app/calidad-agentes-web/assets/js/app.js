@@ -1170,13 +1170,15 @@ const App = {
     }
     
     // Ask for shift
-    const shiftOptions = ['AM', 'PM', 'Weekend'];
+    const shiftOptions = {
+      '1': 'AM',
+      '2': 'PM',
+      '3': 'Weekend'
+    };
     const shiftMsg = `Seleccione el turno del integrante:\n1. AM (Mañana)\n2. PM (Tarde)\n3. Weekend (Fin de semana)\n\nIngrese el número (1, 2 o 3):`;
     const shiftChoice = prompt(shiftMsg);
     
-    let shift = 'AM'; // default
-    if (shiftChoice === '2') shift = 'PM';
-    else if (shiftChoice === '3') shift = 'Weekend';
+    const shift = shiftOptions[shiftChoice] || 'AM'; // default to AM if invalid choice
     
     const success = DataManager.addTeamMemberWithShift(teamId, {
       name: name.trim(),
@@ -2280,12 +2282,15 @@ const App = {
     const conocimientoCriteria = ['serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia'];
     const herramientasCriteria = ['rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'];
     
-    // Count total errors
+    // Count total errors - optimize by caching DOM queries
     const allCriteria = [...empatiaCriteria, ...gestionTicketCriteria, ...conocimientoCriteria, ...herramientasCriteria];
-    const totalErrors = allCriteria.reduce((count, criterionId) => {
+    let totalErrors = 0;
+    for (const criterionId of allCriteria) {
       const checkbox = document.getElementById(criterionId);
-      return count + (checkbox && !checkbox.checked ? 1 : 0);
-    }, 0);
+      if (checkbox && !checkbox.checked) {
+        totalErrors++;
+      }
+    }
 
     // Apply strict rule: 2 or more errors = 0 points
     if (totalErrors >= 2) {
