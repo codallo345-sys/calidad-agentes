@@ -7,7 +7,7 @@ const App = {
 
   // Observation Modal
   showObservationModal(title, content) {
-    document.getElementById('observationTitle').textContent = `💬 ${title}`;
+    document.getElementById('observationTitle').textContent = '💬 Comentario de Calificación';
     document.getElementById('observationContent').textContent = content;
     const modal = document.getElementById('observationModal');
     modal.style.display = 'flex';
@@ -2152,46 +2152,51 @@ const App = {
           <td colspan="2" style="text-align: center;">📊 PROMEDIO</td>
       `;
       
-      // Average for each week
+      // Calculate totals/averages for each week
       weeks.forEach((week, weekIndex) => {
-        const avgTickets = agentsList.length > 0 ? (avgRow.tickets[weekIndex] || 0) / agentsList.length : 0;
+        // TOTALS (sums) for counts
+        const totalTickets = avgRow.tickets[weekIndex] || 0;
+        const totalBad = avgRow.ticketsBad[weekIndex] || 0;
+        const totalGood = avgRow.ticketsGood[weekIndex] || 0;
+        
+        // AVERAGES for rates and times
         const avgTicketsPerHour = agentsList.length > 0 ? (avgRow.ticketsPerHour[weekIndex] || 0) / agentsList.length : 0;
-        const avgBad = agentsList.length > 0 ? (avgRow.ticketsBad[weekIndex] || 0) / agentsList.length : 0;
-        const avgGood = agentsList.length > 0 ? (avgRow.ticketsGood[weekIndex] || 0) / agentsList.length : 0;
         const avgFirstResp = agentsList.length > 0 ? (avgRow.firstResponse[weekIndex] || 0) / agentsList.length : 0;
         const avgResol = agentsList.length > 0 ? (avgRow.resolutionTime[weekIndex] || 0) / agentsList.length : 0;
-        const avgCalifPct = avgTickets > 0 ? ((avgBad + avgGood) / avgTickets * 100) : 0;
+        
+        // Calculated percentage from totals
+        const totalCalifPct = totalTickets > 0 ? ((totalBad + totalGood) / totalTickets * 100) : 0;
         
         tableHTML += `
-          <td style="text-align: center;">${avgTickets > 0 ? avgTickets.toFixed(1) : '-'}</td>
+          <td style="text-align: center;">${totalTickets > 0 ? totalTickets.toFixed(0) : '-'}</td>
           <td style="text-align: center; color: #8b5cf6;">${avgTicketsPerHour > 0 ? avgTicketsPerHour.toFixed(1) : '-'}</td>
-          <td style="text-align: center;">${avgBad > 0 ? avgBad.toFixed(1) : '-'}</td>
-          <td style="text-align: center;">${avgGood > 0 ? avgGood.toFixed(1) : '-'}</td>
+          <td style="text-align: center;">${totalBad > 0 ? totalBad.toFixed(0) : '-'}</td>
+          <td style="text-align: center;">${totalGood > 0 ? totalGood.toFixed(0) : '-'}</td>
           <td style="text-align: center;">${avgFirstResp > 0 ? avgFirstResp.toFixed(1) : '-'}</td>
           <td style="text-align: center;">${avgResol > 0 ? avgResol.toFixed(1) : '-'}</td>
-          <td style="text-align: center; color: #0ea5e9;">${avgCalifPct > 0 ? avgCalifPct.toFixed(1) + '%' : '-'}</td>
+          <td style="text-align: center; color: #0ea5e9;">${totalCalifPct > 0 ? totalCalifPct.toFixed(1) + '%' : '-'}</td>
           <td style="text-align: center; color: #38CEA6;">-</td>
           ${isEditor ? '<td></td>' : ''}
         `;
       });
       
-      // Monthly average
-      const monthlyAvgTickets = monthlyAvg.count > 0 ? monthlyAvg.tickets / monthlyAvg.count : 0;
+      // Monthly totals and averages
+      const monthlyTotalTickets = monthlyAvg.tickets;
+      const monthlyTotalBad = monthlyAvg.ticketsBad;
+      const monthlyTotalGood = monthlyAvg.ticketsGood;
       const monthlyAvgTicketsPerHour = monthlyAvg.count > 0 ? monthlyAvg.ticketsPerHour / monthlyAvg.count : 0;
-      const monthlyAvgBad = monthlyAvg.count > 0 ? monthlyAvg.ticketsBad / monthlyAvg.count : 0;
-      const monthlyAvgGood = monthlyAvg.count > 0 ? monthlyAvg.ticketsGood / monthlyAvg.count : 0;
       const monthlyAvgFirstResp = monthlyAvg.count > 0 ? monthlyAvg.firstResponse / monthlyAvg.count : 0;
       const monthlyAvgResol = monthlyAvg.count > 0 ? monthlyAvg.resolutionTime / monthlyAvg.count : 0;
-      const monthlyAvgCalifPct = monthlyAvgTickets > 0 ? ((monthlyAvgBad + monthlyAvgGood) / monthlyAvgTickets * 100) : 0;
+      const monthlyTotalCalifPct = monthlyTotalTickets > 0 ? ((monthlyTotalBad + monthlyTotalGood) / monthlyTotalTickets * 100) : 0;
       
       tableHTML += `
-        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgTickets > 0 ? monthlyAvgTickets.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4;">${monthlyTotalTickets > 0 ? monthlyTotalTickets.toFixed(0) : '-'}</td>
         <td style="text-align: center; background: #f0fdf4; color: #8b5cf6;">${monthlyAvgTicketsPerHour > 0 ? monthlyAvgTicketsPerHour.toFixed(1) : '-'}</td>
-        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgBad > 0 ? monthlyAvgBad.toFixed(1) : '-'}</td>
-        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgGood > 0 ? monthlyAvgGood.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4;">${monthlyTotalBad > 0 ? monthlyTotalBad.toFixed(0) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4;">${monthlyTotalGood > 0 ? monthlyTotalGood.toFixed(0) : '-'}</td>
         <td style="text-align: center; background: #f0fdf4;">${monthlyAvgFirstResp > 0 ? monthlyAvgFirstResp.toFixed(1) : '-'}</td>
         <td style="text-align: center; background: #f0fdf4;">${monthlyAvgResol > 0 ? monthlyAvgResol.toFixed(1) : '-'}</td>
-        <td style="text-align: center; background: #f0fdf4; color: #0ea5e9;">${monthlyAvgCalifPct > 0 ? monthlyAvgCalifPct.toFixed(1) + '%' : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4; color: #0ea5e9;">${monthlyTotalCalifPct > 0 ? monthlyTotalCalifPct.toFixed(1) + '%' : '-'}</td>
         <td style="text-align: center; background: #f0fdf4; color: #38CEA6;">-</td>
         ${isEditor ? '<td style="background: #f0fdf4;"></td>' : ''}
       </tr>

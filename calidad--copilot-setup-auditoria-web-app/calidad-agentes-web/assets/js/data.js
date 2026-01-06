@@ -931,9 +931,10 @@ const DataManager = {
   // Delete a specific week from configuration
   deleteWeekFromConfig(year, month, weekIndex) {
     const config = this.getWeekConfig(year, month);
-    if (config.weeks && config.weeks[weekIndex]) {
+    if (config.weeks && config.weeks.length > 1 && config.weeks[weekIndex]) {
       config.weeks.splice(weekIndex, 1);
-      this.saveWeekConfig(year, month, config);
+      // Save directly to localStorage to ensure persistence
+      localStorage.setItem(`weekConfig_${year}_${month}`, JSON.stringify(config));
       return true;
     }
     return false;
