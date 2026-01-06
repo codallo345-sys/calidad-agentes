@@ -2097,6 +2097,107 @@ const App = {
       tableHTML += `</tr>`;
     });
     
+    // Calculate and add PROMEDIO (average) row
+    if (agentsList.length > 0) {
+      const avgRow = { tickets: [], ticketsPerHour: [], ticketsBad: [], ticketsGood: [], firstResponse: [], resolutionTime: [], percentCalif: [], quality: [] };
+      const monthlyAvg = { tickets: 0, ticketsPerHour: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, percentCalif: 0, quality: 0, count: 0 };
+      
+      // Sum up all agent metrics for each week
+      agentsList.forEach(agentName => {
+        weeks.forEach((week, weekIndex) => {
+          const weekData = manualData[agentName] && manualData[agentName][weekIndex];
+          if (weekData) {
+            avgRow.tickets[weekIndex] = (avgRow.tickets[weekIndex] || 0) + (weekData.tickets || 0);
+            avgRow.ticketsPerHour[weekIndex] = (avgRow.ticketsPerHour[weekIndex] || 0) + (weekData.ticketsPerHour || 0);
+            avgRow.ticketsBad[weekIndex] = (avgRow.ticketsBad[weekIndex] || 0) + (weekData.ticketsBad || 0);
+            avgRow.ticketsGood[weekIndex] = (avgRow.ticketsGood[weekIndex] || 0) + (weekData.ticketsGood || 0);
+            avgRow.firstResponse[weekIndex] = (avgRow.firstResponse[weekIndex] || 0) + (weekData.firstResponse || 0);
+            avgRow.resolutionTime[weekIndex] = (avgRow.resolutionTime[weekIndex] || 0) + (weekData.resolutionTime || 0);
+          }
+        });
+        
+        // Sum monthly totals
+        const monthlyTotals = { tickets: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, ticketsPerHour: 0, weekCount: 0 };
+        weeks.forEach((week, weekIndex) => {
+          const weekData = manualData[agentName] && manualData[agentName][weekIndex];
+          if (weekData) {
+            monthlyTotals.tickets += weekData.tickets || 0;
+            monthlyTotals.ticketsBad += weekData.ticketsBad || 0;
+            monthlyTotals.ticketsGood += weekData.ticketsGood || 0;
+            monthlyTotals.firstResponse += weekData.firstResponse || 0;
+            monthlyTotals.resolutionTime += weekData.resolutionTime || 0;
+            if (weekData.ticketsPerHour) {
+              monthlyTotals.ticketsPerHour += weekData.ticketsPerHour;
+              monthlyTotals.weekCount++;
+            }
+          }
+        });
+        
+        if (monthlyTotals.tickets > 0) {
+          monthlyAvg.tickets += monthlyTotals.tickets;
+          monthlyAvg.ticketsBad += monthlyTotals.ticketsBad;
+          monthlyAvg.ticketsGood += monthlyTotals.ticketsGood;
+          monthlyAvg.firstResponse += monthlyTotals.firstResponse;
+          monthlyAvg.resolutionTime += monthlyTotals.resolutionTime;
+          if (monthlyTotals.weekCount > 0) {
+            monthlyAvg.ticketsPerHour += monthlyTotals.ticketsPerHour / monthlyTotals.weekCount;
+          }
+          monthlyAvg.count++;
+        }
+      });
+      
+      // Build PROMEDIO row
+      tableHTML += `
+        <tr style="background: rgba(56, 206, 166, 0.15); font-weight: 600; border-top: 2px solid #38CEA6;">
+          <td colspan="2" style="text-align: center;">📊 PROMEDIO</td>
+      `;
+      
+      // Average for each week
+      weeks.forEach((week, weekIndex) => {
+        const avgTickets = agentsList.length > 0 ? (avgRow.tickets[weekIndex] || 0) / agentsList.length : 0;
+        const avgTicketsPerHour = agentsList.length > 0 ? (avgRow.ticketsPerHour[weekIndex] || 0) / agentsList.length : 0;
+        const avgBad = agentsList.length > 0 ? (avgRow.ticketsBad[weekIndex] || 0) / agentsList.length : 0;
+        const avgGood = agentsList.length > 0 ? (avgRow.ticketsGood[weekIndex] || 0) / agentsList.length : 0;
+        const avgFirstResp = agentsList.length > 0 ? (avgRow.firstResponse[weekIndex] || 0) / agentsList.length : 0;
+        const avgResol = agentsList.length > 0 ? (avgRow.resolutionTime[weekIndex] || 0) / agentsList.length : 0;
+        const avgCalifPct = avgTickets > 0 ? ((avgBad + avgGood) / avgTickets * 100) : 0;
+        
+        tableHTML += `
+          <td style="text-align: center;">${avgTickets > 0 ? avgTickets.toFixed(1) : '-'}</td>
+          <td style="text-align: center; color: #8b5cf6;">${avgTicketsPerHour > 0 ? avgTicketsPerHour.toFixed(1) : '-'}</td>
+          <td style="text-align: center;">${avgBad > 0 ? avgBad.toFixed(1) : '-'}</td>
+          <td style="text-align: center;">${avgGood > 0 ? avgGood.toFixed(1) : '-'}</td>
+          <td style="text-align: center;">${avgFirstResp > 0 ? avgFirstResp.toFixed(1) : '-'}</td>
+          <td style="text-align: center;">${avgResol > 0 ? avgResol.toFixed(1) : '-'}</td>
+          <td style="text-align: center; color: #0ea5e9;">${avgCalifPct > 0 ? avgCalifPct.toFixed(1) + '%' : '-'}</td>
+          <td style="text-align: center; color: #38CEA6;">-</td>
+          ${isEditor ? '<td></td>' : ''}
+        `;
+      });
+      
+      // Monthly average
+      const monthlyAvgTickets = monthlyAvg.count > 0 ? monthlyAvg.tickets / monthlyAvg.count : 0;
+      const monthlyAvgTicketsPerHour = monthlyAvg.count > 0 ? monthlyAvg.ticketsPerHour / monthlyAvg.count : 0;
+      const monthlyAvgBad = monthlyAvg.count > 0 ? monthlyAvg.ticketsBad / monthlyAvg.count : 0;
+      const monthlyAvgGood = monthlyAvg.count > 0 ? monthlyAvg.ticketsGood / monthlyAvg.count : 0;
+      const monthlyAvgFirstResp = monthlyAvg.count > 0 ? monthlyAvg.firstResponse / monthlyAvg.count : 0;
+      const monthlyAvgResol = monthlyAvg.count > 0 ? monthlyAvg.resolutionTime / monthlyAvg.count : 0;
+      const monthlyAvgCalifPct = monthlyAvgTickets > 0 ? ((monthlyAvgBad + monthlyAvgGood) / monthlyAvgTickets * 100) : 0;
+      
+      tableHTML += `
+        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgTickets > 0 ? monthlyAvgTickets.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4; color: #8b5cf6;">${monthlyAvgTicketsPerHour > 0 ? monthlyAvgTicketsPerHour.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgBad > 0 ? monthlyAvgBad.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgGood > 0 ? monthlyAvgGood.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgFirstResp > 0 ? monthlyAvgFirstResp.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4;">${monthlyAvgResol > 0 ? monthlyAvgResol.toFixed(1) : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4; color: #0ea5e9;">${monthlyAvgCalifPct > 0 ? monthlyAvgCalifPct.toFixed(1) + '%' : '-'}</td>
+        <td style="text-align: center; background: #f0fdf4; color: #38CEA6;">-</td>
+        ${isEditor ? '<td style="background: #f0fdf4;"></td>' : ''}
+      </tr>
+      `;
+    }
+    
     tableHTML += `</tbody></table></div>`;
     
     container.innerHTML = tableHTML;
