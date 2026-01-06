@@ -2814,7 +2814,11 @@ const App = {
     // Add event listener for delete week buttons
     document.querySelectorAll('.delete-week-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const weekIndex = parseInt(e.target.closest('.delete-week-btn').getAttribute('data-week-index'));
+        e.preventDefault();
+        e.stopPropagation();
+        // Get the button element (might click on icon inside)
+        const button = e.currentTarget;
+        const weekIndex = parseInt(button.getAttribute('data-week-index'));
         const currentYear = new Date().getFullYear();
         const month = parseInt(filterMonthMetrics.value);
         
