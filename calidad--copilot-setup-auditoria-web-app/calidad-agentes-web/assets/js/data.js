@@ -930,14 +930,30 @@ const DataManager = {
 
   // Delete a specific week from configuration
   deleteWeekFromConfig(year, month, weekIndex) {
-    const config = this.getWeekConfig(year, month);
-    if (config.weeks && config.weeks.length > 1 && config.weeks[weekIndex]) {
-      config.weeks.splice(weekIndex, 1);
-      // Save directly to localStorage to ensure persistence
-      localStorage.setItem(`weekConfig_${year}_${month}`, JSON.stringify(config));
-      return true;
+    const key = `weekConfig_${year}_${month}`;
+    const stored = localStorage.getItem(key);
+    if (!stored) return false;
+    
+    const config = JSON.parse(stored);
+    
+    // Require at least 2 weeks to allow deletion (must keep at least 1)
+    if (!config.weeks || config.weeks.length <= 1) {
+      alert('No se puede eliminar la última semana. Debe haber al menos una semana configurada.');
+      return false;
     }
-    return false;
+    
+    // Check if the week index is valid
+    if (weekIndex < 0 || weekIndex >= config.weeks.length) {
+      return false;
+    }
+    
+    // Remove the week
+    config.weeks.splice(weekIndex, 1);
+    
+    // Save back to localStorage
+    localStorage.setItem(key, JSON.stringify(config));
+    
+    return true;
   }
 };
 

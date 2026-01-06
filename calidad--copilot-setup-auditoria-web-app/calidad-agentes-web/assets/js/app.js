@@ -2099,20 +2099,23 @@ const App = {
     
     // Calculate and add PROMEDIO (average) row
     if (agentsList.length > 0) {
-      const avgRow = { tickets: [], ticketsPerHour: [], ticketsBad: [], ticketsGood: [], firstResponse: [], resolutionTime: [], percentCalif: [], quality: [] };
-      const monthlyAvg = { tickets: 0, ticketsPerHour: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, percentCalif: 0, quality: 0, count: 0 };
+      const avgRow = { tickets: [], ticketsPerHour: [], ticketsBad: [], ticketsGood: [], firstResponse: [], resolutionTime: [], agentCount: [] };
+      const monthlyAvg = { tickets: 0, ticketsPerHour: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, agentCount: 0, weekCount: 0 };
       
-      // Sum up all agent metrics for each week
+      // Sum up all agent metrics for each week and count agents with data
       agentsList.forEach(agentName => {
         weeks.forEach((week, weekIndex) => {
           const weekData = manualData[agentName] && manualData[agentName][weekIndex];
-          if (weekData) {
+          if (weekData && (weekData.tickets > 0 || weekData.firstResponse > 0 || weekData.resolutionTime > 0)) {
+            // Initialize arrays if not exists
             avgRow.tickets[weekIndex] = (avgRow.tickets[weekIndex] || 0) + (weekData.tickets || 0);
             avgRow.ticketsPerHour[weekIndex] = (avgRow.ticketsPerHour[weekIndex] || 0) + (weekData.ticketsPerHour || 0);
             avgRow.ticketsBad[weekIndex] = (avgRow.ticketsBad[weekIndex] || 0) + (weekData.ticketsBad || 0);
             avgRow.ticketsGood[weekIndex] = (avgRow.ticketsGood[weekIndex] || 0) + (weekData.ticketsGood || 0);
             avgRow.firstResponse[weekIndex] = (avgRow.firstResponse[weekIndex] || 0) + (weekData.firstResponse || 0);
             avgRow.resolutionTime[weekIndex] = (avgRow.resolutionTime[weekIndex] || 0) + (weekData.resolutionTime || 0);
+            // Count agents with data for this week
+            avgRow.agentCount[weekIndex] = (avgRow.agentCount[weekIndex] || 0) + 1;
           }
         });
         
@@ -2120,7 +2123,7 @@ const App = {
         const monthlyTotals = { tickets: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, ticketsPerHour: 0, weekCount: 0 };
         weeks.forEach((week, weekIndex) => {
           const weekData = manualData[agentName] && manualData[agentName][weekIndex];
-          if (weekData) {
+          if (weekData && (weekData.tickets > 0 || weekData.firstResponse > 0 || weekData.resolutionTime > 0)) {
             monthlyTotals.tickets += weekData.tickets || 0;
             monthlyTotals.ticketsBad += weekData.ticketsBad || 0;
             monthlyTotals.ticketsGood += weekData.ticketsGood || 0;
@@ -2128,21 +2131,20 @@ const App = {
             monthlyTotals.resolutionTime += weekData.resolutionTime || 0;
             if (weekData.ticketsPerHour) {
               monthlyTotals.ticketsPerHour += weekData.ticketsPerHour;
-              monthlyTotals.weekCount++;
             }
+            monthlyTotals.weekCount++;
           }
         });
         
-        if (monthlyTotals.tickets > 0) {
+        if (monthlyTotals.weekCount > 0) {
           monthlyAvg.tickets += monthlyTotals.tickets;
           monthlyAvg.ticketsBad += monthlyTotals.ticketsBad;
           monthlyAvg.ticketsGood += monthlyTotals.ticketsGood;
           monthlyAvg.firstResponse += monthlyTotals.firstResponse;
           monthlyAvg.resolutionTime += monthlyTotals.resolutionTime;
-          if (monthlyTotals.weekCount > 0) {
-            monthlyAvg.ticketsPerHour += monthlyTotals.ticketsPerHour / monthlyTotals.weekCount;
-          }
-          monthlyAvg.count++;
+          monthlyAvg.ticketsPerHour += monthlyTotals.ticketsPerHour;
+          monthlyAvg.weekCount += monthlyTotals.weekCount;
+          monthlyAvg.agentCount++;
         }
       });
       
@@ -2154,15 +2156,17 @@ const App = {
       
       // Calculate totals/averages for each week
       weeks.forEach((week, weekIndex) => {
+        const agentCountForWeek = avgRow.agentCount[weekIndex] || 0;
+        
         // TOTALS (sums) for counts
         const totalTickets = avgRow.tickets[weekIndex] || 0;
         const totalBad = avgRow.ticketsBad[weekIndex] || 0;
         const totalGood = avgRow.ticketsGood[weekIndex] || 0;
         
-        // AVERAGES for rates and times
-        const avgTicketsPerHour = agentsList.length > 0 ? (avgRow.ticketsPerHour[weekIndex] || 0) / agentsList.length : 0;
-        const avgFirstResp = agentsList.length > 0 ? (avgRow.firstResponse[weekIndex] || 0) / agentsList.length : 0;
-        const avgResol = agentsList.length > 0 ? (avgRow.resolutionTime[weekIndex] || 0) / agentsList.length : 0;
+        // AVERAGES for rates and times (divide by agents with data, not all agents)
+        const avgTicketsPerHour = agentCountForWeek > 0 ? (avgRow.ticketsPerHour[weekIndex] || 0) / agentCountForWeek : 0;
+        const avgFirstResp = agentCountForWeek > 0 ? (avgRow.firstResponse[weekIndex] || 0) / agentCountForWeek : 0;
+        const avgResol = agentCountForWeek > 0 ? (avgRow.resolutionTime[weekIndex] || 0) / agentCountForWeek : 0;
         
         // Calculated percentage from totals
         const totalCalifPct = totalTickets > 0 ? ((totalBad + totalGood) / totalTickets * 100) : 0;
@@ -2184,9 +2188,9 @@ const App = {
       const monthlyTotalTickets = monthlyAvg.tickets;
       const monthlyTotalBad = monthlyAvg.ticketsBad;
       const monthlyTotalGood = monthlyAvg.ticketsGood;
-      const monthlyAvgTicketsPerHour = monthlyAvg.count > 0 ? monthlyAvg.ticketsPerHour / monthlyAvg.count : 0;
-      const monthlyAvgFirstResp = monthlyAvg.count > 0 ? monthlyAvg.firstResponse / monthlyAvg.count : 0;
-      const monthlyAvgResol = monthlyAvg.count > 0 ? monthlyAvg.resolutionTime / monthlyAvg.count : 0;
+      const monthlyAvgTicketsPerHour = monthlyAvg.weekCount > 0 ? monthlyAvg.ticketsPerHour / monthlyAvg.weekCount : 0;
+      const monthlyAvgFirstResp = monthlyAvg.weekCount > 0 ? monthlyAvg.firstResponse / monthlyAvg.weekCount : 0;
+      const monthlyAvgResol = monthlyAvg.weekCount > 0 ? monthlyAvg.resolutionTime / monthlyAvg.weekCount : 0;
       const monthlyTotalCalifPct = monthlyTotalTickets > 0 ? ((monthlyTotalBad + monthlyTotalGood) / monthlyTotalTickets * 100) : 0;
       
       tableHTML += `
