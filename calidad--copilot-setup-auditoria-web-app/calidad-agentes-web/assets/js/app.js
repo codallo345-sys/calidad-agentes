@@ -2855,14 +2855,15 @@ const App = {
         const currentYear = new Date().getFullYear();
         const month = parseInt(filterMonthMetrics.value);
         
+        console.log(`Delete button clicked: weekIndex=${weekIndex}, month=${month}, year=${currentYear}`);
+        
         if (confirm(`¿Está seguro que desea eliminar la Semana ${weekIndex + 1}?`)) {
           const success = DataManager.deleteWeekFromConfig(currentYear, month, weekIndex);
           if (success) {
             // Refresh the modal - use App reference instead of this
             App.openWeekConfigModal();
-          } else {
-            alert('No se pudo eliminar la semana. Verifique que haya al menos 2 semanas configuradas.');
           }
+          // Error messages are now shown by deleteWeekFromConfig function
         }
       });
     });

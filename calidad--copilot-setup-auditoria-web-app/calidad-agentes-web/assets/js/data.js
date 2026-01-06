@@ -932,9 +932,16 @@ const DataManager = {
   deleteWeekFromConfig(year, month, weekIndex) {
     const key = `weekConfig_${year}_${month}`;
     const stored = localStorage.getItem(key);
-    if (!stored) return false;
+    
+    if (!stored) {
+      console.error(`No config found for key: ${key}`);
+      alert(`No se encontró configuración para ${month}/${year}. Por favor, configure las semanas primero.`);
+      return false;
+    }
     
     const config = JSON.parse(stored);
+    
+    console.log(`Attempting to delete week ${weekIndex} from config with ${config.weeks?.length || 0} weeks`);
     
     // Require at least 2 weeks to allow deletion (must keep at least 1)
     if (!config.weeks || config.weeks.length <= 1) {
@@ -944,6 +951,8 @@ const DataManager = {
     
     // Check if the week index is valid
     if (weekIndex < 0 || weekIndex >= config.weeks.length) {
+      console.error(`Invalid week index: ${weekIndex}, config has ${config.weeks.length} weeks`);
+      alert(`Índice de semana inválido (${weekIndex}). La configuración tiene ${config.weeks.length} semanas.`);
       return false;
     }
     
@@ -953,6 +962,7 @@ const DataManager = {
     // Save back to localStorage
     localStorage.setItem(key, JSON.stringify(config));
     
+    console.log(`Week ${weekIndex} deleted successfully. New count: ${config.weeks.length}`);
     return true;
   }
 };
