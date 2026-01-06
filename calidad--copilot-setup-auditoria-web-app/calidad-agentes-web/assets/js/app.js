@@ -613,9 +613,9 @@ const App = {
     }
     
     // Add team filter dropdown if it doesn't exist
-    const parentCard = container.closest('.card');
-    let filterContainer = parentCard.querySelector('.top-agents-filter');
-    if (!filterContainer) {
+    const parentCard = container.closest('.glass') || container.parentElement;
+    let filterContainer = parentCard ? parentCard.querySelector('.top-agents-filter') : null;
+    if (!filterContainer && parentCard) {
       filterContainer = document.createElement('div');
       filterContainer.className = 'top-agents-filter';
       filterContainer.style.cssText = 'margin-bottom: 1rem;';
