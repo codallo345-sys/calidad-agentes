@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix calidad--copilot-setup-auditoria-web-app run dev",
-    "start": "npm --prefix calidad--copilot-setup-auditoria-web-app run dev",
-    "build": "npm --prefix calidad--copilot-setup-auditoria-web-app run build"
+    "dev": "npm --prefix calidad--copilot-setup-auditoria-web-app/calidad-agentes-web run dev",
+    "start": "npm --prefix calidad--copilot-setup-auditoria-web-app/calidad-agentes-web run dev",
+    "build": "npm --prefix calidad--copilot-setup-auditoria-web-app/calidad-agentes-web run build"
   }
 }
