@@ -25,6 +25,153 @@ const App = {
     modal.style.display = 'none';
   },
 
+  // Excel Import Modal
+  openExcelImportModal() {
+    const modal = document.getElementById('excelImportModal');
+    modal.style.display = 'flex';
+    document.getElementById('excelPasteArea').value = '';
+    
+    // Close on backdrop click
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        this.closeExcelImportModal();
+      }
+    };
+  },
+
+  closeExcelImportModal() {
+    const modal = document.getElementById('excelImportModal');
+    modal.style.display = 'none';
+  },
+
+  importFromExcel() {
+    const pasteArea = document.getElementById('excelPasteArea');
+    const data = pasteArea.value.trim();
+    
+    if (!data) {
+      alert('Por favor pegue los datos de Excel antes de importar.');
+      return;
+    }
+
+    const selectedMonth = document.getElementById('filterMonthMetrics').value;
+    const selectedTeam = document.getElementById('filterTeamWeekly').value;
+    
+    if (selectedMonth === '') {
+      alert('Por favor seleccione un mes antes de importar.');
+      return;
+    }
+
+    const lines = data.split('\n');
+    if (lines.length < 2) {
+      alert('Los datos parecen estar vacíos o mal formateados.');
+      return;
+    }
+
+    // Skip header row (first line)
+    const dataLines = lines.slice(1);
+    
+    let imported = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (let i = 0; i < dataLines.length; i++) {
+      const line = dataLines[i].trim();
+      if (!line) continue;
+
+      const values = line.split('\t');
+      
+      if (values.length < 6) {
+        skipped++;
+        continue;
+      }
+
+      // Clean agent name (remove special chars, emojis, nbsp)
+      let agentName = values[0].trim()
+        .replace(/[🏾⏾⭐✨📅🌆🌅🌙]/g, '')  // Remove emojis
+        .replace(/&nbsp;/g, ' ')           // Replace nbsp
+        .replace(/\s+/g, ' ')              // Normalize spaces
+        .trim();
+
+      if (!agentName || agentName.length < 2) {
+        skipped++;
+        continue;
+      }
+
+      // Validate agent exists in team
+      const teams = DataManager.getTeams();
+      let agentExists = false;
+      
+      if (selectedTeam) {
+        // Check specific team
+        const team = teams[selectedTeam];
+        if (team && team.members) {
+          agentExists = team.members.some(m => m.name === agentName);
+        }
+      } else {
+        // Check all teams
+        for (const teamId in teams) {
+          const team = teams[teamId];
+          if (team.members && team.members.some(m => m.name === agentName)) {
+            agentExists = true;
+            break;
+          }
+        }
+      }
+
+      if (!agentExists) {
+        errors.push(`${agentName} no encontrado en el equipo`);
+        skipped++;
+        continue;
+      }
+
+      // Parse numeric values (handle comma as decimal separator)
+      const tickets = parseInt(values[1]) || 0;
+      const ticketsBad = parseInt(values[2]) || 0;
+      const ticketsGood = parseInt(values[3]) || 0;
+      const firstResponseSeconds = parseFloat(values[4].replace(',', '.')) || 0;
+      const resolutionMinutes = parseFloat(values[5].replace(',', '.')) || 0;
+
+      // Calculate metrics
+      const ticketsPerHour = tickets > 0 ? tickets / 8 : 0; // Assume 8-hour shift
+      const califPct = (tickets > 0) ? ((ticketsGood / tickets) * 100) : 0;
+
+      // Save for all weeks in selected month
+      const currentYear = new Date().getFullYear();
+      const config = DataManager.getWeekConfig(currentYear, parseInt(selectedMonth));
+      
+      if (config && config.weeks) {
+        for (let weekIndex = 0; weekIndex < config.weeks.length; weekIndex++) {
+          const metrics = {
+            tickets,
+            ticketsBad,
+            ticketsGood,
+            firstResponseSeconds,
+            resolutionMinutes,
+            ticketsPerHour,
+            califPct
+          };
+          
+          DataManager.saveWeeklyMetric(agentName, {
+            year: currentYear,
+            month: parseInt(selectedMonth),
+            week: weekIndex
+          }, metrics);
+        }
+      }
+
+      imported++;
+    }
+
+    this.closeExcelImportModal();
+    
+    if (imported > 0) {
+      alert(`✅ ${imported} agente(s) importados correctamente.\n${skipped > 0 ? `⚠️ ${skipped} filas omitidas.` : ''}\n${errors.length > 0 ? `\nErrores:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...y ${errors.length - 5} más` : ''}` : ''}`);
+      this.loadWeeklyMetrics();
+    } else {
+      alert('❌ No se pudo importar ningún dato. Verifique que:\n- Los agentes existan en el equipo seleccionado\n- Los datos estén en el formato correcto (separados por tabulación)\n- Haya seleccionado un mes');
+    }
+  },
+
   // Shift priority for sorting
   getShiftPriority(shift) {
     const order = {
@@ -204,6 +351,12 @@ const App = {
         e.preventDefault();
         e.stopImmediatePropagation();
         this.openWeekConfigModal();
+      }
+      // Excel import button
+      if (e.target && e.target.id === 'excelImportBtn') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.openExcelImportModal();
       }
     });
 
