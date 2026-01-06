@@ -570,12 +570,15 @@ const App = {
 
     container.innerHTML = recentAudits.map(audit => `
       <div style="padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
-        <div style="display: flex; justify-content: space-between; gap: 0.5rem;">
-          <span style="font-weight: 600; color: var(--text-primary);">${audit.agentName}</span>
-          <span style="font-size: 0.85rem; color: var(--text-muted);">${DataManager.formatDate(audit.date)}</span>
+        <div style="display: flex; justify-content: space-between; gap: 0.5rem; align-items: center;">
+          <div>
+            <span style="font-size: 1.1rem; margin-right: 0.3rem;">📋</span>
+            <span style="font-weight: 600; color: var(--text-primary);">${audit.agentName}</span>
+          </div>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">📅 ${DataManager.formatDate(audit.date)}</span>
         </div>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">
-          ${audit.type} - Puntuación: ${audit.score}
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-left: 1.4rem;">
+          ${audit.type} - Puntuación: <span style="font-weight: 600; color: ${audit.score >= 80 ? '#38CEA6' : audit.score >= 60 ? '#f59e0b' : '#ef4444'};">${audit.score}%</span>
         </div>
       </div>
     `).join('');
@@ -602,24 +605,69 @@ const App = {
     
     const container = document.getElementById('topAgents');
     
-    // Update heading to show top 2 and bottom 3
+    // Update heading to show top 2 and bottom 3 with team filter
     const headingElement = container.parentElement.querySelector('h3');
     if (headingElement) {
       const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
       headingElement.innerHTML = `<i class="fas fa-star"></i> Mejores y Puntos de Mejora - ${monthNames[currentMonth]} ${currentYear}`;
     }
     
-    // For editors: show top 2 and bottom 3 from each team
-    // For team users: show top 2 and bottom 3 from their team only
-    if (isEditor) {
-      // Show top 2 and bottom 3 from each team
+    // Add team filter dropdown if it doesn't exist
+    const parentCard = container.closest('.card');
+    let filterContainer = parentCard.querySelector('.top-agents-filter');
+    if (!filterContainer) {
+      filterContainer = document.createElement('div');
+      filterContainer.className = 'top-agents-filter';
+      filterContainer.style.cssText = 'margin-bottom: 1rem;';
+      filterContainer.innerHTML = `
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <label style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">
+            <i class="fas fa-filter"></i> Filtrar por Equipo:
+          </label>
+          <select id="topAgentsTeamFilter" class="input-dark" style="flex: 1; max-width: 300px;">
+            <option value="all">Todos los Equipos</option>
+            ${Object.entries(teams).map(([teamId, team]) => `
+              <option value="${teamId}">${team.name}</option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+      container.parentElement.insertBefore(filterContainer, container);
+      
+      // Add event listener for filter
+      document.getElementById('topAgentsTeamFilter').addEventListener('change', () => {
+        this.loadTopAgents();
+      });
+    }
+    
+    // Get selected team filter
+    const selectedTeamFilter = document.getElementById('topAgentsTeamFilter')?.value || 'all';
+    
+    // Helper function to calculate satisfaction percentage for an agent
+    const calculateSatisfaction = (agentName) => {
+      return DataManager.calculateAgentSatisfaction(agentName, currentYear, currentMonth);
+    };
+    
+    // Filter teams based on selection
+    const teamsToShow = selectedTeamFilter === 'all' 
+      ? Object.entries(teams)
+      : [[selectedTeamFilter, teams[selectedTeamFilter]]].filter(([_, t]) => t);
+    
+    if (!isEditor && userTeam) {
+      // For non-editors, only show their team
+      teamsToShow.length = 0;
+      teamsToShow.push([userTeam, teams[userTeam]]);
+    }
+    
+    // For editors: show top 2 and agents needing improvement from selected team(s)
+    if (isEditor || userTeam) {
       const teamRankings = {};
       
-      Object.entries(teams).forEach(([teamId, team]) => {
+      teamsToShow.forEach(([teamId, team]) => {
         const teamMemberNames = team.members ? team.members.map(m => m.name) : [];
         const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
         
-        // Calculate agent scores
+        // Calculate agent scores with satisfaction
         const agentScores = {};
         teamAudits.forEach(audit => {
           if (!agentScores[audit.agentName]) {
@@ -629,24 +677,38 @@ const App = {
           agentScores[audit.agentName].count++;
         });
         
-        // Get all agents sorted by score
-        const sortedAgents = Object.entries(agentScores)
+        // Get all agents with both quality and satisfaction scores
+        const allAgents = Object.entries(agentScores)
           .map(([name, data]) => ({
             name,
-            avgScore: Math.round(data.total / data.count),
+            avgQuality: Math.round(data.total / data.count),
+            satisfactionPct: calculateSatisfaction(name),
             count: data.count
-          }))
-          .sort((a, b) => b.avgScore - a.avgScore);
+          }));
         
-        // Get top 2 and bottom 3
-        const top2 = sortedAgents.slice(0, 2);
-        const bottom3 = sortedAgents.slice(-3).reverse();
+        // Agents needing improvement: quality < 83% OR satisfaction < 90%
+        const needsImprovement = allAgents
+          .filter(agent => agent.avgQuality < 83 || agent.satisfactionPct < 90)
+          .sort((a, b) => {
+            // Sort by combined score (quality + satisfaction) ascending (worst first)
+            const scoreA = a.avgQuality + a.satisfactionPct;
+            const scoreB = b.avgQuality + b.satisfactionPct;
+            return scoreA - scoreB;
+          })
+          .slice(0, 3); // Top 3 needing improvement
         
-        teamRankings[teamId] = { team, top2, bottom3 };
+        // Top agents: exclude those needing improvement, then take top 2
+        const excellentAgents = allAgents
+          .filter(agent => !needsImprovement.find(n => n.name === agent.name))
+          .sort((a, b) => b.avgQuality - a.avgQuality);
+        
+        const top2 = excellentAgents.slice(0, 2);
+        
+        teamRankings[teamId] = { team, top2, needsImprovement };
       });
       
       container.innerHTML = Object.entries(teamRankings).map(([teamId, data]) => {
-        if (!data.top2.length && !data.bottom3.length) return '';
+        if (!data.top2.length && !data.needsImprovement.length) return '';
         
         return `
           <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid ${data.team.color};">
@@ -663,25 +725,35 @@ const App = {
                       <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
                       <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
                     </div>
-                    <div style="font-weight: 700; color: #38CEA6; font-size: 1rem;">
-                      ${agent.avgScore}%
+                    <div style="text-align: right;">
+                      <div style="font-weight: 700; color: #38CEA6; font-size: 1rem;">
+                        🎯 ${agent.avgQuality}%
+                      </div>
+                      <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        😊 ${agent.satisfactionPct}%
+                      </div>
                     </div>
                   </div>
                 `).join('')}
               </div>
             ` : ''}
-            ${data.bottom3.length > 0 ? `
+            ${data.needsImprovement.length > 0 ? `
               <div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">📊 PUNTOS DE MEJORA (3 MÁS BAJOS)</div>
-                ${data.bottom3.map((agent) => `
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">📊 PUEDE MEJORAR (&lt;83% calidad o &lt;90% satisfacción)</div>
+                ${data.needsImprovement.map((agent) => `
                   <div style="padding: 0.4rem 0; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                       <span style="font-size: 1rem; margin-right: 0.5rem;">📉</span>
                       <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
                       <span style="font-size: 0.85rem; color: var(--text-muted);"> • ${agent.count} auditorías</span>
                     </div>
-                    <div style="font-weight: 700; color: #f59e0b; font-size: 1rem;">
-                      ${agent.avgScore}%
+                    <div style="text-align: right;">
+                      <div style="font-weight: 700; color: ${agent.avgQuality < 83 ? '#ef4444' : '#f59e0b'}; font-size: 1rem;">
+                        🎯 ${agent.avgQuality}%
+                      </div>
+                      <div style="font-size: 0.8rem; color: ${agent.satisfactionPct < 90 ? '#ef4444' : 'var(--text-muted)'};">
+                        😊 ${agent.satisfactionPct}%
+                      </div>
                     </div>
                   </div>
                 `).join('')}
@@ -691,83 +763,9 @@ const App = {
         `;
       }).join('');
       
-    } else if (userTeam) {
-      // Show top 2 and bottom 3 from user's team only
-      const team = teams[userTeam];
-      const teamMemberNames = team && team.members ? team.members.map(m => m.name) : [];
-      const teamAudits = currentMonthAudits.filter(audit => teamMemberNames.includes(audit.agentName));
-      
-      // Calculate agent scores
-      const agentScores = {};
-      teamAudits.forEach(audit => {
-        if (!agentScores[audit.agentName]) {
-          agentScores[audit.agentName] = { total: 0, count: 0 };
-        }
-        agentScores[audit.agentName].total += parseFloat(audit.score || 0);
-        agentScores[audit.agentName].count++;
-      });
-      
-      // Get all agents sorted by score
-      const sortedAgents = Object.entries(agentScores)
-        .map(([name, data]) => ({
-          name,
-          avgScore: Math.round(data.total / data.count),
-          count: data.count
-        }))
-        .sort((a, b) => b.avgScore - a.avgScore);
-      
-      // Get top 2 and bottom 3
-      const top2 = sortedAgents.slice(0, 2);
-      const bottom3 = sortedAgents.slice(-3).reverse();
-      
-      if (top2.length === 0 && bottom3.length === 0) {
-        container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
-        return;
+      if (container.innerHTML.trim() === '') {
+        container.innerHTML = '<p class="empty">No hay datos disponibles para el equipo seleccionado</p>';
       }
-      
-      container.innerHTML = `
-        ${top2.length > 0 ? `
-          <div style="margin-bottom: 0.75rem;">
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">✨ TOP 2 MEJORES</div>
-            ${top2.map((agent, index) => `
-              <div style="padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <span style="font-size: 1.3rem; margin-right: 0.5rem;">${index === 0 ? '🥇' : '🥈'}</span>
-                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
-                  <div style="font-size: 0.85rem; color: ${team.color};">
-                    ${team.name} • ${agent.count} auditorías
-                  </div>
-                </div>
-                <div style="font-weight: 700; color: #38CEA6; font-size: 1.1rem;">
-                  ${agent.avgScore}%
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-        ${bottom3.length > 0 ? `
-          <div>
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">📊 PUNTOS DE MEJORA (3 MÁS BAJOS)</div>
-            ${bottom3.map((agent) => `
-              <div style="padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <span style="font-size: 1rem; margin-right: 0.5rem;">📉</span>
-                  <span style="font-weight: 600; color: var(--text-primary);">${agent.name}</span>
-                  <div style="font-size: 0.85rem; color: ${team.color};">
-                    ${team.name} • ${agent.count} auditorías
-                  </div>
-                </div>
-                <div style="font-weight: 700; color: #f59e0b; font-size: 1.1rem;">
-                  ${agent.avgScore}%
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-      `;
-    } else {
-      // For viewers without a team, show empty state
-      container.innerHTML = '<p class="empty">No hay datos disponibles</p>';
     }
   },
 
@@ -1333,17 +1331,42 @@ const App = {
   },
 
   closeAuditModal() {
-    document.getElementById('auditModal').classList.add('hidden');
+    const modal = document.getElementById('auditModal');
+    modal.classList.add('hidden');
+    
+    // Re-enable submit button
+    const submitBtn = modal.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Auditoría';
+    }
+    
+    // Reset form
+    document.getElementById('auditForm').reset();
   },
 
   handleAuditSubmit(e) {
     e.preventDefault();
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn?.innerHTML;
+    
+    // Disable button temporarily
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    }
     
     const auditId = document.getElementById('auditId').value;
     const agentSelectValue = document.getElementById('agentSelect').value;
     
     if (!agentSelectValue) {
       alert('Por favor seleccione un agente');
+      // Re-enable button
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
       return;
     }
     
@@ -1798,7 +1821,7 @@ const App = {
     // Add week headers - USE ALL CONFIGURED WEEKS
     weeks.forEach((week, index) => {
       tableHTML += `
-        <th colspan="${isEditor ? 8 : 7}" style="background: #f0f9ff; text-align: center; font-size: 0.8rem; padding: 0.5rem;">
+        <th colspan="${isEditor ? 9 : 8}" style="background: #f0f9ff; text-align: center; font-size: 0.8rem; padding: 0.5rem;">
           Semana ${index + 1}: ${week.startDate.split('-')[2]}/${week.startDate.split('-')[1]} al ${week.endDate.split('-')[2]}/${week.endDate.split('-')[1]}
         </th>
       `;
@@ -1806,7 +1829,7 @@ const App = {
     
     // Add accumulated month header
     tableHTML += `
-      <th colspan="${isEditor ? 8 : 7}" style="background: #f0fdf4; text-align: center; font-weight: 700; font-size: 0.8rem; padding: 0.5rem;">
+      <th colspan="${isEditor ? 9 : 8}" style="background: #f0fdf4; text-align: center; font-weight: 700; font-size: 0.8rem; padding: 0.5rem;">
         ACUMULADO DEL MES
       </th>
     `;
@@ -1817,6 +1840,7 @@ const App = {
     weeks.forEach(() => {
       tableHTML += `
         <th style="font-size: 0.7rem; background: #f8fafc; white-space: nowrap;">Tickets</th>
+        <th style="font-size: 0.7rem; background: #f8fafc; white-space: nowrap;">Tickets x Hora</th>
         <th style="font-size: 0.7rem; background: #f8fafc; white-space: nowrap;">Calif. Malos</th>
         <th style="font-size: 0.7rem; background: #f8fafc; white-space: nowrap;">Calif. Buena</th>
         <th style="font-size: 0.7rem; background: #f8fafc; white-space: nowrap;">T. Resp. (s)</th>
@@ -1830,6 +1854,7 @@ const App = {
     // Add accumulated subheaders
     tableHTML += `
       <th style="font-size: 0.7rem; background: #f0fdf4; white-space: nowrap;">Tickets</th>
+      <th style="font-size: 0.7rem; background: #f0fdf4; white-space: nowrap;">Tickets x Hora</th>
       <th style="font-size: 0.7rem; background: #f0fdf4; white-space: nowrap;">Calif. Malos</th>
       <th style="font-size: 0.7rem; background: #f0fdf4; white-space: nowrap;">Calif. Buena</th>
       <th style="font-size: 0.7rem; background: #f0fdf4; white-space: nowrap;">T. Resp. (s)</th>
@@ -1852,6 +1877,7 @@ const App = {
         ticketsGood: 0,
         firstResponse: 0,
         resolutionTime: 0,
+        ticketsPerHour: 0,
         quality: 0,
         qualityCount: 0,
         weekCount: 0
@@ -1881,6 +1907,7 @@ const App = {
         const ticketsGood = manual.ticketsGood || 0;
         const firstResponse = manual.firstResponse || 0;
         const resolutionTime = manual.resolutionTime || 0;
+        const ticketsPerHour = manual.ticketsPerHour || 0;
         
         // Calculate % Calif automatically: (ticketsBad + ticketsGood) / tickets * 100
         let percentCalif = '-';
@@ -1896,11 +1923,15 @@ const App = {
           monthlyTotals.ticketsGood += ticketsGood;
           monthlyTotals.firstResponse += firstResponse;
           monthlyTotals.resolutionTime += resolutionTime;
+          if (ticketsPerHour > 0) {
+            monthlyTotals.ticketsPerHour += ticketsPerHour;
+          }
           monthlyTotals.weekCount++;
         }
         
         tableHTML += `
           <td style="text-align: center;">${tickets || '-'}</td>
+          <td style="text-align: center; font-weight: 600; color: #8b5cf6;">${ticketsPerHour ? ticketsPerHour.toFixed(1) : '-'}</td>
           <td style="text-align: center;">${ticketsBad || '-'}</td>
           <td style="text-align: center;">${ticketsGood || '-'}</td>
           <td style="text-align: center;">${firstResponse || '-'}</td>
@@ -1915,6 +1946,7 @@ const App = {
       const avgFirstResponse = monthlyTotals.weekCount > 0 ? Math.round(monthlyTotals.firstResponse / monthlyTotals.weekCount) : 0;
       const avgResolutionTime = monthlyTotals.weekCount > 0 ? Math.round(monthlyTotals.resolutionTime / monthlyTotals.weekCount) : 0;
       const avgQuality = monthlyTotals.qualityCount > 0 ? Math.round(monthlyTotals.quality / monthlyTotals.qualityCount) : 0;
+      const avgTicketsPerHour = monthlyTotals.weekCount > 0 && monthlyTotals.ticketsPerHour > 0 ? (monthlyTotals.ticketsPerHour / monthlyTotals.weekCount).toFixed(1) : '-';
       
       // Calculate total % Calif: (total rated / total tickets) * 100
       const totalRated = monthlyTotals.ticketsBad + monthlyTotals.ticketsGood;
@@ -1922,6 +1954,7 @@ const App = {
       
       tableHTML += `
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${monthlyTotals.tickets || '-'}</td>
+        <td style="text-align: center; background: #f0fdf4; font-weight: 700; color: #8b5cf6;">${avgTicketsPerHour}</td>
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${monthlyTotals.ticketsBad || '-'}</td>
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${monthlyTotals.ticketsGood || '-'}</td>
         <td style="text-align: center; background: #f0fdf4; font-weight: 700;">${avgFirstResponse || '-'}</td>
@@ -2479,10 +2512,17 @@ const App = {
     
     weeks.forEach((week, index) => {
       content += `
-        <div style="background: #f9fafb; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border-left: 3px solid #38CEA6;">
-          <h4 style="font-size: 0.95rem; font-weight: 700; margin: 0 0 0.75rem 0;">
-            Semana ${index + 1}
-          </h4>
+        <div class="week-config-item" data-week-index="${index}" style="background: #f9fafb; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border-left: 3px solid #38CEA6; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; margin: 0;">
+              Semana ${index + 1}
+            </h4>
+            ${weeks.length > 1 ? `
+              <button type="button" class="delete-week-btn" data-week-index="${index}" style="background: #fee2e2; color: #dc2626; border: none; padding: 0.4rem 0.8rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="fas fa-trash"></i> Eliminar
+              </button>
+            ` : ''}
+          </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div>
               <label class="label-small">Fecha de Inicio</label>
@@ -2505,6 +2545,23 @@ const App = {
     
     document.getElementById('weekConfigContent').innerHTML = content;
     document.getElementById('weekConfigModal').classList.remove('hidden');
+    
+    // Add event listener for delete week buttons
+    document.querySelectorAll('.delete-week-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const weekIndex = parseInt(e.target.closest('.delete-week-btn').getAttribute('data-week-index'));
+        const currentYear = new Date().getFullYear();
+        const month = parseInt(filterMonthMetrics.value);
+        
+        if (confirm(`¿Está seguro que desea eliminar la Semana ${weekIndex + 1}?`)) {
+          const success = DataManager.deleteWeekFromConfig(currentYear, month, weekIndex);
+          if (success) {
+            // Refresh the modal
+            this.openWeekConfigModal();
+          }
+        }
+      });
+    });
     
     // Add event listener for add week button
     document.getElementById('addWeekBtn').addEventListener('click', () => {

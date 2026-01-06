@@ -895,6 +895,48 @@ const DataManager = {
       month: 'short', 
       day: 'numeric' 
     });
+  },
+
+  // Calculate satisfaction percentage for an agent based on weekly metrics
+  calculateAgentSatisfaction(agentName, year, month) {
+    const weeklyData = this.getWeeklyMetricsData(year, month);
+    if (!weeklyData[agentName]) return 0;
+    
+    let totalTickets = 0;
+    let totalGood = 0;
+    
+    Object.values(weeklyData[agentName]).forEach(weekData => {
+      if (weekData.tickets) {
+        totalTickets += weekData.tickets || 0;
+        totalGood += weekData.ticketsGood || 0;
+      }
+    });
+    
+    if (totalTickets === 0) return 0;
+    return Math.round((totalGood / totalTickets) * 100);
+  },
+
+  // Get agent email by name (from teams)
+  getAgentEmailByName(agentName) {
+    const teams = this.getAllTeams();
+    for (const team of Object.values(teams)) {
+      if (team.members) {
+        const member = team.members.find(m => m.name === agentName);
+        if (member) return member.email;
+      }
+    }
+    return null;
+  },
+
+  // Delete a specific week from configuration
+  deleteWeekFromConfig(year, month, weekIndex) {
+    const config = this.getWeekConfig(year, month);
+    if (config.weeks && config.weeks[weekIndex]) {
+      config.weeks.splice(weekIndex, 1);
+      this.saveWeekConfig(year, month, config);
+      return true;
+    }
+    return false;
   }
 };
 
