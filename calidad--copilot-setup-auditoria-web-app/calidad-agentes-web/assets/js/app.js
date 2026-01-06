@@ -619,29 +619,47 @@ const App = {
       filterContainer = document.createElement('div');
       filterContainer.className = 'top-agents-filter';
       filterContainer.style.cssText = 'margin-bottom: 1rem;';
+      
+      // RBAC: Lector can only see their team, Editor sees all teams
+      let filterOptions = '';
+      if (isEditor) {
+        // Editor sees "Todos los Equipos" option
+        filterOptions = `
+          <option value="all">Todos los Equipos</option>
+          ${Object.entries(teams).map(([teamId, team]) => `
+            <option value="${teamId}">${team.name}</option>
+          `).join('')}
+        `;
+      } else if (userTeam && teams[userTeam]) {
+        // Lector only sees their own team (no "Todos" option)
+        filterOptions = `<option value="${userTeam}">${teams[userTeam].name}</option>`;
+      }
+      
       filterContainer.innerHTML = `
         <div style="display: flex; gap: 0.5rem; align-items: center;">
           <label style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">
-            <i class="fas fa-filter"></i> Filtrar por Equipo:
+            <i class="fas fa-filter"></i> ${isEditor ? 'Filtrar por Equipo:' : 'Equipo:'}
           </label>
-          <select id="topAgentsTeamFilter" class="input-dark" style="flex: 1; max-width: 300px;">
-            <option value="all">Todos los Equipos</option>
-            ${Object.entries(teams).map(([teamId, team]) => `
-              <option value="${teamId}">${team.name}</option>
-            `).join('')}
+          <select id="topAgentsTeamFilter" class="input-dark" style="flex: 1; max-width: 300px;" ${!isEditor ? 'disabled' : ''}>
+            ${filterOptions}
           </select>
         </div>
       `;
       container.parentElement.insertBefore(filterContainer, container);
       
-      // Add event listener for filter
-      document.getElementById('topAgentsTeamFilter').addEventListener('change', () => {
-        this.loadTopAgents();
-      });
+      // Add event listener for filter (only if editor)
+      if (isEditor) {
+        document.getElementById('topAgentsTeamFilter').addEventListener('change', () => {
+          this.loadTopAgents();
+        });
+      }
     }
     
     // Get selected team filter
     const selectedTeamFilter = document.getElementById('topAgentsTeamFilter')?.value || 'all';
+    
+    // RBAC: Force Lector to their team filter
+    const effectiveTeamFilter = !isEditor && userTeam ? userTeam : selectedTeamFilter;
     
     // Helper function to calculate satisfaction percentage for an agent
     const calculateSatisfaction = (agentName) => {
@@ -649,15 +667,9 @@ const App = {
     };
     
     // Filter teams based on selection
-    const teamsToShow = selectedTeamFilter === 'all' 
+    const teamsToShow = effectiveTeamFilter === 'all' 
       ? Object.entries(teams)
-      : [[selectedTeamFilter, teams[selectedTeamFilter]]].filter(([_, t]) => t);
-    
-    if (!isEditor && userTeam) {
-      // For non-editors, only show their team
-      teamsToShow.length = 0;
-      teamsToShow.push([userTeam, teams[userTeam]]);
-    }
+      : [[effectiveTeamFilter, teams[effectiveTeamFilter]]].filter(([_, t]) => t);
     
     // For editors: show top 2 and agents needing improvement from selected team(s)
     if (isEditor || userTeam) {
@@ -737,7 +749,7 @@ const App = {
                 `).join('')}
               </div>
             ` : ''}
-            ${data.needsImprovement.length > 0 ? `
+            ${isEditor && data.needsImprovement.length > 0 ? `
               <div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">📊 PUEDE MEJORAR (&lt;83% calidad o &lt;90% satisfacción)</div>
                 ${data.needsImprovement.map((agent) => `
