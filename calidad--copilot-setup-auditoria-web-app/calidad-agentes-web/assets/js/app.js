@@ -1283,8 +1283,22 @@ const App = {
         document.getElementById('auditDate').value = audit.date;
         document.getElementById('tipificacion').value = audit.tipificacion || '';
         document.getElementById('ticketSummary').value = audit.ticketSummary || '';
-        document.getElementById('observations').value = audit.observations || '';
         document.getElementById('calculatedScore').value = audit.score || 0;
+        
+        // Load per-criterion observations if they exist
+        if (audit.criterionObservations) {
+          Object.keys(audit.criterionObservations).forEach(criterionId => {
+            const obsField = document.querySelector(`#obs-${criterionId} textarea`);
+            if (obsField) {
+              obsField.value = audit.criterionObservations[criterionId];
+              // Show the observation field
+              const obsContainer = document.getElementById(`obs-${criterionId}`);
+              if (obsContainer) {
+                obsContainer.style.display = 'block';
+              }
+            }
+          });
+        }
         
         // Load evaluation data if exists
         if (audit.evaluationData) {
@@ -1343,6 +1357,13 @@ const App = {
     
     // Reset form
     document.getElementById('auditForm').reset();
+    
+    // Hide all observation fields
+    document.querySelectorAll('.observation-field').forEach(field => {
+      field.style.display = 'none';
+      const textarea = field.querySelector('textarea');
+      if (textarea) textarea.value = '';
+    });
   },
 
   handleAuditSubmit(e) {
@@ -1499,10 +1520,16 @@ const App = {
       const checked = audit.evaluationData?.empatia?.[key];
       const icon = checked ? '✓' : '✗';
       const color = checked ? '#38CEA6' : '#ef4444';
+      const hasObservation = audit.criterionObservations && audit.criterionObservations[key];
       empatiaHTML += `
         <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: ${checked ? '#f0fdf4' : '#fef2f2'}; border-radius: 0.5rem;">
           <span style="font-size: 1.2rem; color: ${color}; font-weight: bold;">${icon}</span>
           <span style="flex: 1; color: var(--text-primary);">${label}</span>
+          ${!checked && hasObservation ? `
+            <button class="btn-mini" onclick="alert('Observación:\\n\\n${hasObservation.replace(/'/g, "\\'")}'); return false;" title="Ver observación" style="background: #f59e0b; color: white; border: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
+              <i class="fas fa-question-circle"></i>
+            </button>
+          ` : ''}
         </div>
       `;
     });
@@ -1557,10 +1584,16 @@ const App = {
         const checked = audit.evaluationData?.gestion?.[categoryKey]?.[key];
         const icon = checked ? '✓' : '✗';
         const color = checked ? '#38CEA6' : '#ef4444';
+        const hasObservation = audit.criterionObservations && audit.criterionObservations[key];
         gestionHTML += `
           <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem; background: ${checked ? '#f0fdf4' : '#fef2f2'}; border-radius: 0.35rem;">
             <span style="font-size: 1rem; color: ${color}; font-weight: bold;">${icon}</span>
             <span style="flex: 1; font-size: 0.85rem; color: var(--text-primary);">${label}</span>
+            ${!checked && hasObservation ? `
+              <button class="btn-mini" onclick="alert('Observación:\\n\\n${hasObservation.replace(/'/g, "\\'")}'); return false;" title="Ver observación" style="background: #f59e0b; color: white; border: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
+                <i class="fas fa-question-circle"></i>
+              </button>
+            ` : ''}
           </div>
         `;
       });
@@ -1614,14 +1647,6 @@ const App = {
             </h4>
             <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; white-space: pre-wrap; line-height: 1.6;">
               ${audit.ticketSummary || 'No hay resumen disponible'}
-            </div>
-          </div>
-          <div>
-            <h4 style="font-size: 0.95rem; font-weight: 700; margin: 0 0 0.5rem 0; color: var(--text-primary);">
-              <i class="fas fa-comment"></i> Observaciones
-            </h4>
-            <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; white-space: pre-wrap; line-height: 1.6;">
-              ${audit.observations || 'No hay observaciones disponibles'}
             </div>
           </div>
         </div>
