@@ -5,6 +5,69 @@ const App = {
   currentView: 'dashboard',
   charts: {},
 
+  // Observation Modal
+  showObservationModal(title, content) {
+    document.getElementById('observationTitle').textContent = `💬 ${title}`;
+    document.getElementById('observationContent').textContent = content;
+    const modal = document.getElementById('observationModal');
+    modal.style.display = 'flex';
+    
+    // Close on backdrop click
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        this.closeObservationModal();
+      }
+    };
+  },
+
+  closeObservationModal() {
+    const modal = document.getElementById('observationModal');
+    modal.style.display = 'none';
+  },
+
+  // Shift priority for sorting
+  getShiftPriority(shift) {
+    const order = {
+      'AM': 1,
+      'PM': 2,
+      'Madrugada Semana Completa': 3,
+      'Madrugada': 4,
+      'Fin de Semana AM': 5,
+      'Fin de Semana PM': 6
+    };
+    return order[shift] || 999;
+  },
+
+  // Get shift badge HTML
+  getShiftBadge(shift) {
+    const shiftConfig = {
+      'AM': { icon: '🌅', color: '#38CEA6', abbrev: 'AM' },
+      'PM': { icon: '🌙', color: '#06b6d4', abbrev: 'PM' },
+      'Madrugada Semana Completa': { icon: '⭐', color: '#a855f7', abbrev: 'Mad-SC' },
+      'Madrugada': { icon: '✨', color: '#8b5cf6', abbrev: 'Mad' },
+      'Fin de Semana AM': { icon: '📅', color: '#f59e0b', abbrev: 'FDS-AM' },
+      'Fin de Semana PM': { icon: '🌆', color: '#ef4444', abbrev: 'FDS-PM' }
+    };
+    
+    const config = shiftConfig[shift] || { icon: '❓', color: '#6b7280', abbrev: shift };
+    
+    return `<span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; background: ${config.color}; color: white; white-space: nowrap;">${config.icon} ${config.abbrev}</span>`;
+  },
+
+  // Get agent shift from teams
+  getAgentShift(agentName, teams) {
+    for (const teamId in teams) {
+      const team = teams[teamId];
+      if (team.members) {
+        const member = team.members.find(m => m.name === agentName);
+        if (member && member.shift) {
+          return member.shift;
+        }
+      }
+    }
+    return 'N/A';
+  },
+
   // Initialize application
   init() {
     // Check if user is logged in
@@ -1538,7 +1601,7 @@ const App = {
           <span style="font-size: 1.2rem; color: ${color}; font-weight: bold;">${icon}</span>
           <span style="flex: 1; color: var(--text-primary);">${label}</span>
           ${!checked && hasObservation ? `
-            <button class="btn-mini" onclick="alert('Observación:\\n\\n${hasObservation.replace(/'/g, "\\'")}'); return false;" title="Ver observación" style="background: #f59e0b; color: white; border: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
+            <button class="btn-mini" onclick="App.showObservationModal('${label}', \`${hasObservation.replace(/`/g, '\\`')}\`); return false;" title="Ver observación" style="background: #f59e0b; color: white; border: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
               <i class="fas fa-question-circle"></i>
             </button>
           ` : ''}
@@ -1602,7 +1665,7 @@ const App = {
             <span style="font-size: 1rem; color: ${color}; font-weight: bold;">${icon}</span>
             <span style="flex: 1; font-size: 0.85rem; color: var(--text-primary);">${label}</span>
             ${!checked && hasObservation ? `
-              <button class="btn-mini" onclick="alert('Observación:\\n\\n${hasObservation.replace(/'/g, "\\'")}'); return false;" title="Ver observación" style="background: #f59e0b; color: white; border: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
+              <button class="btn-mini" onclick="App.showObservationModal('${label}', \`${hasObservation.replace(/`/g, '\\`')}\`); return false;" title="Ver observación" style="background: #f59e0b; color: white; border: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
                 <i class="fas fa-question-circle"></i>
               </button>
             ` : ''}
@@ -1847,6 +1910,14 @@ const App = {
       agentsList = agentsList.filter(agent => teamMemberNames.includes(agent));
     }
     
+    // Sort agents by shift priority
+    agentsList.sort((a, b) => {
+      // Get shift for each agent
+      const shiftA = this.getAgentShift(a, teams);
+      const shiftB = this.getAgentShift(b, teams);
+      return this.getShiftPriority(shiftA) - this.getShiftPriority(shiftB);
+    });
+    
     if (agentsList.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
@@ -1870,6 +1941,7 @@ const App = {
           <thead>
             <tr>
               <th rowspan="2" style="vertical-align: middle; min-width: 150px;">Nombre del Agente</th>
+              <th rowspan="2" style="vertical-align: middle; min-width: 100px; background: rgba(56, 206, 166, 0.1);">Turno</th>
     `;
     
     // Add week headers - USE ALL CONFIGURED WEEKS
@@ -1922,7 +1994,11 @@ const App = {
     
     // Add rows for each agent
     agentsList.forEach(agentName => {
-      tableHTML += `<tr><td><strong>${agentName}</strong></td>`;
+      // Get agent shift
+      const agentShift = this.getAgentShift(agentName, teams);
+      const shiftBadge = this.getShiftBadge(agentShift);
+      
+      tableHTML += `<tr><td><strong>${agentName}</strong></td><td>${shiftBadge}</td>`;
       
       // Calculate monthly totals
       let monthlyTotals = {
@@ -2115,6 +2191,13 @@ const App = {
       agentsList = agentsList.filter(agent => teamMemberNames.includes(agent));
     }
     
+    // Sort agents by shift priority
+    agentsList.sort((a, b) => {
+      const shiftA = this.getAgentShift(a, teams);
+      const shiftB = this.getAgentShift(b, teams);
+      return this.getShiftPriority(shiftA) - this.getShiftPriority(shiftB);
+    });
+    
     let content = `
       <div style="margin-bottom: 1.5rem;">
         <h3 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 0.5rem 0; color: var(--text-primary);">
@@ -2127,7 +2210,9 @@ const App = {
           <thead>
             <tr>
               <th style="min-width: 140px;">Nombre del Agente</th>
+              <th style="min-width: 100px; background: rgba(56, 206, 166, 0.1);">Turno</th>
               <th>Tickets</th>
+              <th>Tickets x Hora</th>
               <th>Calif. Malos</th>
               <th>Calif. Buena</th>
               <th>T. Resp. (s)</th>
@@ -2143,12 +2228,18 @@ const App = {
     
     // Process each agent - accumulate totals across ALL weeks
     agentsList.forEach(agentName => {
+      // Get agent shift
+      const agentShift = this.getAgentShift(agentName, teams);
+      const shiftBadge = this.getShiftBadge(agentShift);
+      
       // Accumulate data for this agent across all weeks
       let totalTickets = 0;
       let totalTicketsBad = 0;
       let totalTicketsGood = 0;
       let totalFirstResponse = 0;
       let totalResolutionTime = 0;
+      let totalTicketsPerHour = 0;
+      let ticketsPerHourCount = 0;
       let qualitySum = 0;
       let qualityCount = 0;
       let weekCount = 0;
@@ -2168,6 +2259,13 @@ const App = {
           totalTicketsGood += manual.ticketsGood || 0;
           totalFirstResponse += manual.firstResponse || 0;
           totalResolutionTime += manual.resolutionTime || 0;
+          
+          // Accumulate tickets per hour
+          if (manual.ticketsPerHour) {
+            totalTicketsPerHour += manual.ticketsPerHour;
+            ticketsPerHourCount++;
+          }
+          
           weekCount++;
         }
         
@@ -2183,6 +2281,7 @@ const App = {
       const avgFirstResponse = weekCount > 0 ? Math.round(totalFirstResponse / weekCount) : 0;
       const avgResolutionTime = weekCount > 0 ? Math.round(totalResolutionTime / weekCount) : 0;
       const avgQuality = qualityCount > 0 ? Math.round(qualitySum / qualityCount) : 0;
+      const avgTicketsPerHour = ticketsPerHourCount > 0 ? (totalTicketsPerHour / ticketsPerHourCount).toFixed(1) : '-';
       
       // Calculate % Calif (automatically based on good + bad / total tickets)
       let percentCalif = 0;
@@ -2207,7 +2306,9 @@ const App = {
       content += `
         <tr>
           <td><strong>${agentName}</strong></td>
+          <td style="text-align: center;">${shiftBadge}</td>
           <td style="text-align: center;">${totalTickets || '-'}</td>
+          <td style="text-align: center; color: #a855f7; font-weight: 600;">${avgTicketsPerHour}</td>
           <td style="text-align: center;">${totalTicketsBad || '-'}</td>
           <td style="text-align: center;">${totalTicketsGood || '-'}</td>
           <td style="text-align: center;">${avgFirstResponse || '-'}</td>

@@ -1223,6 +1223,19 @@
     </div>
   </div>
 
+  <!-- Observation Modal -->
+  <div id="observationModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); align-items: center; justify-content: center; z-index: 10000;">
+    <div class="modal-card glass" style="max-width: 500px; width: 90%; background: rgba(255, 255, 255, 0.95); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+      <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid rgba(56, 206, 166, 0.2);">
+        <h3 id="observationTitle" style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">💬 Observación</h3>
+        <button onclick="App.closeObservationModal()" style="background: none; border: none; font-size: 1.75rem; color: var(--text-muted); cursor: pointer; line-height: 1; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444'" onmouseout="this.style.background='none'; this.style.color='var(--text-muted)'">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="observationContent" style="background: rgba(56, 206, 166, 0.05); border-left: 4px solid #38CEA6; padding: 1rem; border-radius: 0.5rem; color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; font-size: 0.95rem;"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="./assets/js/data.js"></script>
   <script src="./assets/js/app.js"></script>
 </body>
