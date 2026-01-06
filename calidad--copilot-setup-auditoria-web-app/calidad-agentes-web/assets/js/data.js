@@ -9,7 +9,9 @@ const DataManager = {
     TEAMS: 'calidad_teams',
     METRICS: 'calidad_metrics',
     WEEKLY_METRICS: 'calidad_weekly_metrics',
-    WEEK_CONFIG: 'calidad_week_config'
+    WEEK_CONFIG: 'calidad_week_config',
+    AUDIT_VIEWS: 'calidad_audit_views',
+    AUDIT_COMMENTS: 'calidad_audit_comments'
   },
 
   // Team definitions
@@ -21,27 +23,32 @@ const DataManager = {
     { id: 'soporte-delivery', name: 'Soporte de Delivery Zupper', color: '#ef4444', email: 'soporte.delivery@ridery.com' }
   ],
 
-  // Default agents (2 per team as examples)
+  // Default agents (Complete team examples with all shifts)
   DEFAULT_AGENTS: {
     'soporte-usuarios': [
-      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios' },
-      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios' }
+      { name: 'María González', email: 'maria.gonzalez@ridery.com', team: 'soporte-usuarios', shift: 'AM' },
+      { name: 'Carlos Ramírez', email: 'carlos.ramirez@ridery.com', team: 'soporte-usuarios', shift: 'PM' },
+      { name: 'Lucía Morales', email: 'lucia.morales@ridery.com', team: 'soporte-usuarios', shift: 'Madrugada Semana Completa' },
+      { name: 'Diego Torres', email: 'diego.torres@ridery.com', team: 'soporte-usuarios', shift: 'Madrugada Entre Semana' },
+      { name: 'Isabella Rojas', email: 'isabella.rojas@ridery.com', team: 'soporte-usuarios', shift: 'Fin de Semana AM' },
+      { name: 'Andrés Vargas', email: 'andres.vargas@ridery.com', team: 'soporte-usuarios', shift: 'Fin de Semana PM' }
     ],
     'soporte-conductores': [
-      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores' },
-      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores' }
+      { name: 'Ana Martínez', email: 'ana.martinez@ridery.com', team: 'soporte-conductores', shift: 'AM' },
+      { name: 'Luis Fernández', email: 'luis.fernandez@ridery.com', team: 'soporte-conductores', shift: 'PM' },
+      { name: 'Allen Castro', email: 'allen.castro@ridery.com', team: 'soporte-conductores', shift: 'Fin de Semana AM' }
     ],
     'soporte-ecr': [
-      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr' },
-      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr' }
+      { name: 'Pedro Sánchez', email: 'pedro.sanchez@ridery.com', team: 'soporte-ecr', shift: 'AM' },
+      { name: 'Laura Torres', email: 'laura.torres@ridery.com', team: 'soporte-ecr', shift: 'Fin de Semana PM' }
     ],
     'soporte-corporativo': [
-      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo' },
-      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo' }
+      { name: 'Miguel Ángel Silva', email: 'miguel.silva@ridery.com', team: 'soporte-corporativo', shift: 'PM' },
+      { name: 'Carmen Díaz', email: 'carmen.diaz@ridery.com', team: 'soporte-corporativo', shift: 'AM' }
     ],
     'soporte-delivery': [
-      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery' },
-      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery' }
+      { name: 'Roberto Medina', email: 'roberto.medina@ridery.com', team: 'soporte-delivery', shift: 'AM' },
+      { name: 'Sofía Rivas', email: 'sofia.rivas@ridery.com', team: 'soporte-delivery', shift: 'Fin de Semana AM' }
     ]
   },
 
@@ -59,9 +66,103 @@ const DataManager = {
 
   // Initialize data
   init() {
-    // Ensure audits array exists
+    // Initialize audits with sample data for soporte-usuarios team
     if (!localStorage.getItem(this.STORAGE_KEYS.AUDITS)) {
-      localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify([]));
+      const now = new Date();
+      const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const sampleAudits = [
+        {
+          id: this.generateId(),
+          agentName: 'María González',
+          agentEmail: 'maria.gonzalez@ridery.com',
+          ticketId: 'TKT-10234',
+          ticketDate: new Date(thisMonth.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: new Date(thisMonth.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          tipificacion: 'Consulta de Servicio',
+          score: 92,
+          empatiaScore: 46,
+          gestionScore: 46,
+          ticketSummary: 'Cliente consultó sobre cambio de plan. Gestión efectiva con buena empatía.',
+          observations: '',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: this.generateId(),
+          agentName: 'Carlos Ramírez',
+          agentEmail: 'carlos.ramirez@ridery.com',
+          ticketId: 'TKT-10245',
+          ticketDate: new Date(thisMonth.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: new Date(thisMonth.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          tipificacion: 'Problema Técnico',
+          score: 75,
+          empatiaScore: 38,
+          gestionScore: 37,
+          ticketSummary: 'Problema de conectividad resuelto. Mejorar seguimiento.',
+          observations: '',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: this.generateId(),
+          agentName: 'Lucía Morales',
+          agentEmail: 'lucia.morales@ridery.com',
+          ticketId: 'TKT-10256',
+          ticketDate: new Date(thisMonth.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: new Date(thisMonth.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          tipificacion: 'Consulta General',
+          score: 96,
+          empatiaScore: 48,
+          gestionScore: 48,
+          ticketSummary: 'Excelente manejo de consulta nocturna. Cliente muy satisfecho.',
+          observations: '',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: this.generateId(),
+          agentName: 'Diego Torres',
+          agentEmail: 'diego.torres@ridery.com',
+          ticketId: 'TKT-10267',
+          ticketDate: new Date(thisMonth.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: new Date(thisMonth.getTime() + 9 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          tipificacion: 'Reclamo',
+          score: 67,
+          empatiaScore: 33,
+          gestionScore: 34,
+          ticketSummary: 'Gestión de reclamo. Requiere mejorar empatía con cliente molesto.',
+          observations: '',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: this.generateId(),
+          agentName: 'Isabella Rojas',
+          agentEmail: 'isabella.rojas@ridery.com',
+          ticketId: 'TKT-10278',
+          ticketDate: new Date(thisMonth.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: new Date(thisMonth.getTime() + 11 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          tipificacion: 'Consulta de Servicio',
+          score: 88,
+          empatiaScore: 44,
+          gestionScore: 44,
+          ticketSummary: 'Atención de fin de semana efectiva. Buen uso de herramientas.',
+          observations: '',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: this.generateId(),
+          agentName: 'Andrés Vargas',
+          agentEmail: 'andres.vargas@ridery.com',
+          ticketId: 'TKT-10289',
+          ticketDate: new Date(thisMonth.getTime() + 12 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: new Date(thisMonth.getTime() + 13 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          tipificacion: 'Soporte Urgente',
+          score: 79,
+          empatiaScore: 40,
+          gestionScore: 39,
+          ticketSummary: 'Urgencia resuelta en fin de semana. Mejorar velocidad de respuesta.',
+          observations: '',
+          createdAt: new Date().toISOString()
+        }
+      ];
+      localStorage.setItem(this.STORAGE_KEYS.AUDITS, JSON.stringify(sampleAudits));
     }
     
     // Initialize teams with default agents
@@ -81,9 +182,52 @@ const DataManager = {
       localStorage.setItem(this.STORAGE_KEYS.METRICS, JSON.stringify({}));
     }
 
-    // Initialize weekly metrics storage
+    // Initialize weekly metrics storage with sample data for soporte-usuarios
     if (!localStorage.getItem(this.STORAGE_KEYS.WEEKLY_METRICS)) {
-      localStorage.setItem(this.STORAGE_KEYS.WEEKLY_METRICS, JSON.stringify({}));
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const sampleMetrics = {
+        [`${currentYear}-${currentMonth}`]: {
+          'María González': {
+            0: { tickets: 125, ticketsBad: 8, ticketsGood: 95, firstResponse: 45, resolutionTime: 12, ticketsPerHour: 6.2, shift: 'AM' },
+            1: { tickets: 118, ticketsBad: 6, ticketsGood: 92, firstResponse: 42, resolutionTime: 11, ticketsPerHour: 5.9, shift: 'AM' },
+            2: { tickets: 132, ticketsBad: 10, ticketsGood: 98, firstResponse: 48, resolutionTime: 13, ticketsPerHour: 6.6, shift: 'AM' },
+            3: { tickets: 120, ticketsBad: 7, ticketsGood: 95, firstResponse: 44, resolutionTime: 12, ticketsPerHour: 6.0, shift: 'AM' }
+          },
+          'Carlos Ramírez': {
+            0: { tickets: 110, ticketsBad: 12, ticketsGood: 85, firstResponse: 52, resolutionTime: 15, ticketsPerHour: 5.5, shift: 'PM' },
+            1: { tickets: 105, ticketsBad: 10, ticketsGood: 82, firstResponse: 50, resolutionTime: 14, ticketsPerHour: 5.2, shift: 'PM' },
+            2: { tickets: 115, ticketsBad: 11, ticketsGood: 88, firstResponse: 53, resolutionTime: 15, ticketsPerHour: 5.8, shift: 'PM' },
+            3: { tickets: 108, ticketsBad: 9, ticketsGood: 86, firstResponse: 51, resolutionTime: 14, ticketsPerHour: 5.4, shift: 'PM' }
+          },
+          'Lucía Morales': {
+            0: { tickets: 95, ticketsBad: 5, ticketsGood: 75, firstResponse: 38, resolutionTime: 10, ticketsPerHour: 4.8, shift: 'Madrugada Semana Completa' },
+            1: { tickets: 88, ticketsBad: 4, ticketsGood: 70, firstResponse: 36, resolutionTime: 9, ticketsPerHour: 4.4, shift: 'Madrugada Semana Completa' },
+            2: { tickets: 92, ticketsBad: 6, ticketsGood: 72, firstResponse: 40, resolutionTime: 10, ticketsPerHour: 4.6, shift: 'Madrugada Semana Completa' },
+            3: { tickets: 90, ticketsBad: 5, ticketsGood: 71, firstResponse: 37, resolutionTime: 9, ticketsPerHour: 4.5, shift: 'Madrugada Semana Completa' }
+          },
+          'Diego Torres': {
+            0: { tickets: 78, ticketsBad: 8, ticketsGood: 60, firstResponse: 55, resolutionTime: 16, ticketsPerHour: 3.9, shift: 'Madrugada Entre Semana' },
+            1: { tickets: 75, ticketsBad: 7, ticketsGood: 58, firstResponse: 53, resolutionTime: 15, ticketsPerHour: 3.8, shift: 'Madrugada Entre Semana' },
+            2: { tickets: 80, ticketsBad: 9, ticketsGood: 62, firstResponse: 56, resolutionTime: 17, ticketsPerHour: 4.0, shift: 'Madrugada Entre Semana' },
+            3: { tickets: 77, ticketsBad: 8, ticketsGood: 59, firstResponse: 54, resolutionTime: 16, ticketsPerHour: 3.9, shift: 'Madrugada Entre Semana' }
+          },
+          'Isabella Rojas': {
+            0: { tickets: 65, ticketsBad: 4, ticketsGood: 52, firstResponse: 48, resolutionTime: 14, ticketsPerHour: 5.4, shift: 'Fin de Semana AM' },
+            1: { tickets: 62, ticketsBad: 3, ticketsGood: 50, firstResponse: 46, resolutionTime: 13, ticketsPerHour: 5.2, shift: 'Fin de Semana AM' },
+            2: { tickets: 68, ticketsBad: 5, ticketsGood: 54, firstResponse: 49, resolutionTime: 14, ticketsPerHour: 5.7, shift: 'Fin de Semana AM' },
+            3: { tickets: 64, ticketsBad: 4, ticketsGood: 51, firstResponse: 47, resolutionTime: 13, ticketsPerHour: 5.3, shift: 'Fin de Semana AM' }
+          },
+          'Andrés Vargas': {
+            0: { tickets: 58, ticketsBad: 6, ticketsGood: 45, firstResponse: 58, resolutionTime: 17, ticketsPerHour: 4.8, shift: 'Fin de Semana PM' },
+            1: { tickets: 55, ticketsBad: 5, ticketsGood: 43, firstResponse: 56, resolutionTime: 16, ticketsPerHour: 4.6, shift: 'Fin de Semana PM' },
+            2: { tickets: 60, ticketsBad: 7, ticketsGood: 46, firstResponse: 59, resolutionTime: 18, ticketsPerHour: 5.0, shift: 'Fin de Semana PM' },
+            3: { tickets: 57, ticketsBad: 6, ticketsGood: 44, firstResponse: 57, resolutionTime: 17, ticketsPerHour: 4.8, shift: 'Fin de Semana PM' }
+          }
+        }
+      };
+      localStorage.setItem(this.STORAGE_KEYS.WEEKLY_METRICS, JSON.stringify(sampleMetrics));
     }
 
     // Initialize week configuration storage
@@ -276,43 +420,72 @@ const DataManager = {
     return audits;
   },
 
-  // Calculate score based on new pillar system
-  // Note: This detailed scoring system is available for future implementation
-  // Currently, audits use a simplified default score approach
+  // Calculate score based on new pillar system with STRICT 2-error rule
+  // Rule: 2 or more errors = 0 points (no partial scores)
   calculateAuditScore(evaluationData) {
-    // Pilar Empatía (50%) - 6 criterios x 8.33 puntos = 50%
+    // Count total errors (unchecked items)
     const empatiaCriteria = [
       'metodoRided', 'lenguajePositivo', 'acompanamiento', 
       'personalizacion', 'estructura', 'usoIaOrtografia'
     ];
+    
+    const gestionTicketCriteria = [
+      'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 
+      'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion'
+    ];
+    
+    const conocimientoCriteria = [
+      'serviciosPromociones', 'informacionVeraz', 
+      'parlamentosContingencia', 'honestidadTransparencia'
+    ];
+    
+    const herramientasCriteria = [
+      'rideryOffice', 'adminZendesk', 'driveManuales', 
+      'slack', 'generacionReportes', 'cargaIncidencias'
+    ];
+
+    // Count errors (unchecked = error)
+    let totalErrors = 0;
+    
+    empatiaCriteria.forEach(criterion => {
+      if (!evaluationData.empatia?.[criterion]) totalErrors++;
+    });
+    
+    gestionTicketCriteria.forEach(criterion => {
+      if (!evaluationData.gestion?.ticket?.[criterion]) totalErrors++;
+    });
+    
+    conocimientoCriteria.forEach(criterion => {
+      if (!evaluationData.gestion?.conocimiento?.[criterion]) totalErrors++;
+    });
+    
+    herramientasCriteria.forEach(criterion => {
+      if (!evaluationData.gestion?.herramientas?.[criterion]) totalErrors++;
+    });
+
+    // STRICT RULE: 2 or more errors = 0 points
+    if (totalErrors >= 2) {
+      return 0;
+    }
+
+    // If 0 or 1 error, calculate normal score
+    // Pilar Empatía (50%) - 6 criterios x 8.33 puntos = 50%
     const empatiaScore = empatiaCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.empatia?.[criterion] ? 8.33 : 0);
     }, 0);
 
     // Pilar Gestión (50%)
     // Gestión de ticket (33% of 50% = 16.67%)
-    const gestionTicketCriteria = [
-      'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 
-      'tipificacion', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion'
-    ];
     const gestionTicketScore = gestionTicketCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.gestion?.ticket?.[criterion] ? (16.67 / 7) : 0);
     }, 0);
 
     // Conocimiento Integral (33% of 50% = 16.67%)
-    const conocimientoCriteria = [
-      'serviciosPromociones', 'informacionVeraz', 
-      'parlamentosContingencia', 'honestidadTransparencia'
-    ];
     const conocimientoScore = conocimientoCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.gestion?.conocimiento?.[criterion] ? (16.67 / 4) : 0);
     }, 0);
 
     // Uso estratégico de herramientas (33% of 50% = 16.67%)
-    const herramientasCriteria = [
-      'rideryOffice', 'adminZendesk', 'driveManuales', 
-      'slack', 'generacionReportes', 'cargaIncidencias'
-    ];
     const herramientasScore = herramientasCriteria.reduce((sum, criterion) => {
       return sum + (evaluationData.gestion?.herramientas?.[criterion] ? (16.67 / 6) : 0);
     }, 0);
@@ -659,6 +832,57 @@ const DataManager = {
     localStorage.setItem(this.STORAGE_KEYS.WEEK_CONFIG, JSON.stringify(allConfigs));
   },
 
+  // Audit Views Tracking
+  markAuditAsViewed(auditId, viewerEmail) {
+    const views = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_VIEWS) || '{}');
+    if (!views[auditId]) {
+      views[auditId] = [];
+    }
+    if (!views[auditId].includes(viewerEmail)) {
+      views[auditId].push(viewerEmail);
+      localStorage.setItem(this.STORAGE_KEYS.AUDIT_VIEWS, JSON.stringify(views));
+    }
+  },
+
+  hasViewedAudit(auditId, viewerEmail) {
+    const views = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_VIEWS) || '{}');
+    return views[auditId] && views[auditId].includes(viewerEmail);
+  },
+
+  // Audit Comments (Agent feedback on their audits)
+  saveAuditComment(auditId, agentEmail, comment) {
+    const comments = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_COMMENTS) || '{}');
+    comments[auditId] = {
+      agentEmail,
+      comment,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(this.STORAGE_KEYS.AUDIT_COMMENTS, JSON.stringify(comments));
+  },
+
+  getAuditComment(auditId) {
+    const comments = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.AUDIT_COMMENTS) || '{}');
+    return comments[auditId] || null;
+  },
+
+  // Add or update team member with shift information
+  addTeamMemberWithShift(teamId, memberData) {
+    const teams = this.getAllTeams();
+    if (teams[teamId]) {
+      // Ensure shift is included
+      const member = {
+        ...memberData,
+        team: teamId,
+        shift: memberData.shift || 'AM',
+        addedAt: new Date().toISOString()
+      };
+      teams[teamId].members.push(member);
+      localStorage.setItem(this.STORAGE_KEYS.TEAMS, JSON.stringify(teams));
+      return true;
+    }
+    return false;
+  },
+
   // Utility
   generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -671,6 +895,75 @@ const DataManager = {
       month: 'short', 
       day: 'numeric' 
     });
+  },
+
+  // Calculate satisfaction percentage for an agent based on weekly metrics
+  calculateAgentSatisfaction(agentName, year, month) {
+    const weeklyData = this.getWeeklyMetricsData(year, month);
+    if (!weeklyData[agentName]) return 0;
+    
+    let totalTickets = 0;
+    let totalGood = 0;
+    
+    Object.values(weeklyData[agentName]).forEach(weekData => {
+      if (weekData.tickets) {
+        totalTickets += weekData.tickets || 0;
+        totalGood += weekData.ticketsGood || 0;
+      }
+    });
+    
+    if (totalTickets === 0) return 0;
+    return Math.round((totalGood / totalTickets) * 100);
+  },
+
+  // Get agent email by name (from teams)
+  getAgentEmailByName(agentName) {
+    const teams = this.getAllTeams();
+    for (const team of Object.values(teams)) {
+      if (team.members) {
+        const member = team.members.find(m => m.name === agentName);
+        if (member) return member.email;
+      }
+    }
+    return null;
+  },
+
+  // Delete a specific week from configuration
+  deleteWeekFromConfig(year, month, weekIndex) {
+    const key = `weekConfig_${year}_${month}`;
+    const stored = localStorage.getItem(key);
+    
+    if (!stored) {
+      console.error(`No config found for key: ${key}`);
+      alert(`No se encontró configuración para ${month}/${year}. Por favor, configure las semanas primero.`);
+      return false;
+    }
+    
+    const config = JSON.parse(stored);
+    
+    console.log(`Attempting to delete week ${weekIndex} from config with ${config.weeks?.length || 0} weeks`);
+    
+    // Require at least 2 weeks to allow deletion (must keep at least 1)
+    if (!config.weeks || config.weeks.length <= 1) {
+      alert('No se puede eliminar la última semana. Debe haber al menos una semana configurada.');
+      return false;
+    }
+    
+    // Check if the week index is valid
+    if (weekIndex < 0 || weekIndex >= config.weeks.length) {
+      console.error(`Invalid week index: ${weekIndex}, config has ${config.weeks.length} weeks`);
+      alert(`Índice de semana inválido (${weekIndex}). La configuración tiene ${config.weeks.length} semanas.`);
+      return false;
+    }
+    
+    // Remove the week
+    config.weeks.splice(weekIndex, 1);
+    
+    // Save back to localStorage
+    localStorage.setItem(key, JSON.stringify(config));
+    
+    console.log(`Week ${weekIndex} deleted successfully. New count: ${config.weeks.length}`);
+    return true;
   }
 };
 

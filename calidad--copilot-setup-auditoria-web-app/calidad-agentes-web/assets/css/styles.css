@@ -1,20 +1,46 @@
+/* Import Urbanist font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700;800;900&display=swap');
+
 :root {
-  --glass-shadow: rgba(0, 0, 0, 0.18);
+  /* RIDERY Corporate Colors - Brand Identity */
+  --ridery-green: #38CEA6;        /* PANTONE 3385 C - Primary Green */
+  --ridery-navy: #0F111E;         /* PANTONE 5255 C - Navy Blue (Primary) */
+  --ridery-fuchsia: #D71D5C;      /* PANTONE 214 C - Fuchsia (Accent/Details) */
+  --ridery-royal-blue: #272883;   /* PANTONE 2736 C - Royal Blue (Accent/Details) */
+  
+  /* Extended palette for UI components */
+  --ridery-green-light: rgba(56, 206, 166, 0.1);
+  --ridery-green-hover: #2fb896;
+  --ridery-navy-light: rgba(15, 17, 30, 0.05);
+  --ridery-fuchsia-light: rgba(215, 29, 92, 0.1);
+  --ridery-royal-blue-light: rgba(39, 40, 131, 0.1);
+  
+  /* Legacy variable mappings for compatibility */
   --ridery-mint: #38CEA6;
-  --ridery-cyan: #06b6d4;
-  --ridery-purple: #a855f7;
-  --ridery-accent: #0b8f6a;
-  --futuristic-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a5f 25%, #0b8f6a 50%, #06b6d4 100%);
+  --ridery-accent: #2fb896;
+  
+  /* Gradients with brand colors */
+  --futuristic-gradient: linear-gradient(135deg, #0F111E 0%, #272883 40%, #38CEA6 100%);
+  --gradient-hero: linear-gradient(135deg, #0F111E, #272883, #38CEA6);
+  --gradient-card: linear-gradient(135deg, rgba(56, 206, 166, 0.05), rgba(39, 40, 131, 0.02));
+  
+  /* Surface colors */
   --surface: #fafbfc;
   --surface-card: #ffffff;
-  --surface-muted: #e8f4f8;
-  --text-primary: #1a202c;
-  --text-muted: #718096;
-  --gradient-hero: linear-gradient(135deg, #0e4c3d, #1e6b5a, #38CEA6, #4dd4b1);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
-  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.2);
+  --surface-muted: rgba(56, 206, 166, 0.05);
+  
+  /* Text colors */
+  --text-primary: #0F111E;        /* Navy for primary text */
+  --text-secondary: #272883;      /* Royal blue for secondary text */
+  --text-muted: #6b7280;
+  
+  /* Shadows */
+  --glass-shadow: rgba(15, 17, 30, 0.15);
+  --shadow-sm: 0 2px 8px rgba(15, 17, 30, 0.08);
+  --shadow-md: 0 4px 16px rgba(15, 17, 30, 0.12);
+  --shadow-lg: 0 8px 32px rgba(15, 17, 30, 0.16);
+  --shadow-xl: 0 12px 48px rgba(15, 17, 30, 0.2);
+  --shadow-ridery: 0 10px 40px rgba(56, 206, 166, 0.3);
 }
 
 * { box-sizing: border-box; }
@@ -48,21 +74,25 @@ html {
 }
 
 body {
-  background: linear-gradient(135deg, #e8f4f8 0%, #d4edf5 50%, #c5e8f0 100%);
+  /* RIDERY Brand: Light gradient with primary green */
+  background: linear-gradient(135deg, #f8fffe 0%, rgba(56, 206, 166, 0.03) 50%, rgba(39, 40, 131, 0.02) 100%);
   color: var(--text-primary);
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  /* RIDERY Brand Typography: Urbanist font family */
+  font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
   margin: 0;
   padding: 0;
   overflow-x: auto;
 }
 
 .bg-grid {
+  /* RIDERY Brand: Subtle grid pattern with brand green */
   background-image:
-    linear-gradient(135deg, #e8f4f8 0%, #d4edf5 50%, #c5e8f0 100%),
-    linear-gradient(to right, rgba(56, 206, 166, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(56, 206, 166, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 32px 32px, 32px 32px;
+    linear-gradient(135deg, #f8fffe 0%, rgba(56, 206, 166, 0.03) 50%, rgba(39, 40, 131, 0.02) 100%),
+    linear-gradient(to right, rgba(56, 206, 166, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 206, 166, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
 }
 
 .hidden { display: none !important; }
@@ -472,4 +502,49 @@ body {
 .checkbox-label span {
   flex: 1;
   line-height: 1.4;
+}
+/* Shift Selection Cards */
+.shift-option {
+  cursor: pointer;
+}
+.shift-option input[type="radio"] {
+  display: none;
+}
+.shift-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: white;
+}
+.shift-card i {
+  font-size: 1.5rem;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.shift-card span {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+.shift-card small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.shift-option input[type="radio"]:checked + .shift-card {
+  border-color: #38CEA6;
+  background: linear-gradient(135deg, rgba(56, 206, 166, 0.1), rgba(11, 143, 106, 0.05));
+}
+.shift-option input[type="radio"]:checked + .shift-card i {
+  color: #38CEA6;
+}
+.shift-option:hover .shift-card {
+  border-color: #38CEA6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 206, 166, 0.2);
 }
