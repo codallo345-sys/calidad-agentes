@@ -1409,15 +1409,32 @@ const App = {
       }
     };
     
+    // Collect per-criterion observations
+    const criterionObservations = {};
+    const allCriteria = [
+      'metodoRided', 'lenguajePositivo', 'acompanamiento', 'personalizacion', 'estructura', 'usoIaOrtografia',
+      'estadosTicket', 'ausenciaCliente', 'validacionHistorial', 'tipificacionCriterio', 'retencionTickets', 'tiempoRespuesta', 'tiempoGestion',
+      'serviciosPromociones', 'informacionVeraz', 'parlamentosContingencia', 'honestidadTransparencia',
+      'rideryOffice', 'adminZendesk', 'driveManuales', 'slack', 'generacionReportes', 'cargaIncidencias'
+    ];
+    
+    allCriteria.forEach(criterionId => {
+      const obsField = document.querySelector(`#obs-${criterionId} textarea`);
+      if (obsField && obsField.value.trim()) {
+        criterionObservations[criterionId] = obsField.value.trim();
+      }
+    });
+    
     const auditData = {
       agentName: agentData.name,
+      agentEmail: agentData.email, // Add email for better tracking
       teamId: agentData.teamId,
       ticketId: document.getElementById('ticketId').value,
       ticketDate: document.getElementById('ticketDate').value,
       date: document.getElementById('auditDate').value,
       tipificacion: document.getElementById('tipificacion').value,
       ticketSummary: document.getElementById('ticketSummary').value,
-      observations: document.getElementById('observations').value,
+      criterionObservations: criterionObservations, // Per-criterion observations
       score: parseFloat(document.getElementById('calculatedScore').value) || 0,
       empatiaScore: parseFloat(document.getElementById('empatiaScore').value) || 0,
       gestionScore: parseFloat(document.getElementById('gestionScore').value) || 0,
