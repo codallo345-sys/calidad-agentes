@@ -2099,13 +2099,18 @@ const App = {
     
     // Calculate and add PROMEDIO (average) row
     if (agentsList.length > 0) {
-      const avgRow = { tickets: [], ticketsPerHour: [], ticketsBad: [], ticketsGood: [], firstResponse: [], resolutionTime: [], agentCount: [] };
-      const monthlyAvg = { tickets: 0, ticketsPerHour: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, agentCount: 0, weekCount: 0 };
+      const avgRow = { tickets: [], ticketsPerHour: [], ticketsBad: [], ticketsGood: [], firstResponse: [], resolutionTime: [], quality: [], qualityCount: [], agentCount: [] };
+      const monthlyAvg = { tickets: 0, ticketsPerHour: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, quality: 0, qualityCount: 0, agentCount: 0, weekCount: 0 };
       
       // Sum up all agent metrics for each week and count agents with data
       agentsList.forEach(agentName => {
         weeks.forEach((week, weekIndex) => {
           const weekData = manualData[agentName] && manualData[agentName][weekIndex];
+          const weekMetric = weekMetrics.find(wm => 
+            wm.week.startDate === week.startDate && wm.week.endDate === week.endDate
+          );
+          const audits = weekMetric && weekMetric.agentMetrics[agentName] ? weekMetric.agentMetrics[agentName] : null;
+          
           if (weekData && (weekData.tickets > 0 || weekData.firstResponse > 0 || weekData.resolutionTime > 0)) {
             // Initialize arrays if not exists
             avgRow.tickets[weekIndex] = (avgRow.tickets[weekIndex] || 0) + (weekData.tickets || 0);
@@ -2117,12 +2122,24 @@ const App = {
             // Count agents with data for this week
             avgRow.agentCount[weekIndex] = (avgRow.agentCount[weekIndex] || 0) + 1;
           }
+          
+          // Add quality from audits if available
+          if (audits && audits.tickets > 0) {
+            const avgScore = Math.round(audits.totalScore / audits.tickets);
+            avgRow.quality[weekIndex] = (avgRow.quality[weekIndex] || 0) + avgScore;
+            avgRow.qualityCount[weekIndex] = (avgRow.qualityCount[weekIndex] || 0) + 1;
+          }
         });
         
         // Sum monthly totals
-        const monthlyTotals = { tickets: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, ticketsPerHour: 0, weekCount: 0 };
+        const monthlyTotals = { tickets: 0, ticketsBad: 0, ticketsGood: 0, firstResponse: 0, resolutionTime: 0, ticketsPerHour: 0, quality: 0, qualityCount: 0, weekCount: 0 };
         weeks.forEach((week, weekIndex) => {
           const weekData = manualData[agentName] && manualData[agentName][weekIndex];
+          const weekMetric = weekMetrics.find(wm => 
+            wm.week.startDate === week.startDate && wm.week.endDate === week.endDate
+          );
+          const audits = weekMetric && weekMetric.agentMetrics[agentName] ? weekMetric.agentMetrics[agentName] : null;
+          
           if (weekData && (weekData.tickets > 0 || weekData.firstResponse > 0 || weekData.resolutionTime > 0)) {
             monthlyTotals.tickets += weekData.tickets || 0;
             monthlyTotals.ticketsBad += weekData.ticketsBad || 0;
@@ -2133,6 +2150,13 @@ const App = {
               monthlyTotals.ticketsPerHour += weekData.ticketsPerHour;
             }
             monthlyTotals.weekCount++;
+          }
+          
+          // Add quality from audits
+          if (audits && audits.tickets > 0) {
+            const avgScore = Math.round(audits.totalScore / audits.tickets);
+            monthlyTotals.quality += avgScore;
+            monthlyTotals.qualityCount++;
           }
         });
         
@@ -2145,6 +2169,11 @@ const App = {
           monthlyAvg.ticketsPerHour += monthlyTotals.ticketsPerHour;
           monthlyAvg.weekCount += monthlyTotals.weekCount;
           monthlyAvg.agentCount++;
+        }
+        
+        if (monthlyTotals.qualityCount > 0) {
+          monthlyAvg.quality += monthlyTotals.quality;
+          monthlyAvg.qualityCount += monthlyTotals.qualityCount;
         }
       });
       
@@ -2171,6 +2200,9 @@ const App = {
         // Calculated percentage from totals
         const totalCalifPct = totalTickets > 0 ? ((totalBad + totalGood) / totalTickets * 100) : 0;
         
+        // Calculate average quality from audits for this week
+        const avgQuality = avgRow.qualityCount[weekIndex] > 0 ? (avgRow.quality[weekIndex] / avgRow.qualityCount[weekIndex]) : 0;
+        
         tableHTML += `
           <td style="text-align: center;">${totalTickets > 0 ? totalTickets.toFixed(0) : '-'}</td>
           <td style="text-align: center; color: #8b5cf6;">${avgTicketsPerHour > 0 ? avgTicketsPerHour.toFixed(1) : '-'}</td>
@@ -2179,7 +2211,7 @@ const App = {
           <td style="text-align: center;">${avgFirstResp > 0 ? avgFirstResp.toFixed(1) : '-'}</td>
           <td style="text-align: center;">${avgResol > 0 ? avgResol.toFixed(1) : '-'}</td>
           <td style="text-align: center; color: #0ea5e9;">${totalCalifPct > 0 ? totalCalifPct.toFixed(1) + '%' : '-'}</td>
-          <td style="text-align: center; color: #38CEA6;">-</td>
+          <td style="text-align: center; color: #38CEA6;">${avgQuality > 0 ? avgQuality.toFixed(1) + '%' : '-'}</td>
           ${isEditor ? '<td></td>' : ''}
         `;
       });
@@ -2192,6 +2224,7 @@ const App = {
       const monthlyAvgFirstResp = monthlyAvg.weekCount > 0 ? monthlyAvg.firstResponse / monthlyAvg.weekCount : 0;
       const monthlyAvgResol = monthlyAvg.weekCount > 0 ? monthlyAvg.resolutionTime / monthlyAvg.weekCount : 0;
       const monthlyTotalCalifPct = monthlyTotalTickets > 0 ? ((monthlyTotalBad + monthlyTotalGood) / monthlyTotalTickets * 100) : 0;
+      const monthlyAvgQuality = monthlyAvg.qualityCount > 0 ? (monthlyAvg.quality / monthlyAvg.qualityCount) : 0;
       
       tableHTML += `
         <td style="text-align: center; background: #f0fdf4;">${monthlyTotalTickets > 0 ? monthlyTotalTickets.toFixed(0) : '-'}</td>
@@ -2201,7 +2234,7 @@ const App = {
         <td style="text-align: center; background: #f0fdf4;">${monthlyAvgFirstResp > 0 ? monthlyAvgFirstResp.toFixed(1) : '-'}</td>
         <td style="text-align: center; background: #f0fdf4;">${monthlyAvgResol > 0 ? monthlyAvgResol.toFixed(1) : '-'}</td>
         <td style="text-align: center; background: #f0fdf4; color: #0ea5e9;">${monthlyTotalCalifPct > 0 ? monthlyTotalCalifPct.toFixed(1) + '%' : '-'}</td>
-        <td style="text-align: center; background: #f0fdf4; color: #38CEA6;">-</td>
+        <td style="text-align: center; background: #f0fdf4; color: #38CEA6;">${monthlyAvgQuality > 0 ? monthlyAvgQuality.toFixed(1) + '%' : '-'}</td>
         ${isEditor ? '<td style="background: #f0fdf4;"></td>' : ''}
       </tr>
       `;
@@ -2825,8 +2858,10 @@ const App = {
         if (confirm(`¿Está seguro que desea eliminar la Semana ${weekIndex + 1}?`)) {
           const success = DataManager.deleteWeekFromConfig(currentYear, month, weekIndex);
           if (success) {
-            // Refresh the modal
-            this.openWeekConfigModal();
+            // Refresh the modal - use App reference instead of this
+            App.openWeekConfigModal();
+          } else {
+            alert('No se pudo eliminar la semana. Verifique que haya al menos 2 semanas configuradas.');
           }
         }
       });
